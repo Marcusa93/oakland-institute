@@ -209,7 +209,7 @@ describe("alertas automáticas", () => {
 
 describe("informes y evaluación docente", () => {
   it("el docente arma el informe de su estudiante con datos calculados por la base", async () => {
-    const d = await rpc<Record<string, any>>(docente, "datos_informe", [ana.estudiante, "2026-01-01", "2027-12-31"]);
+    const d = await rpc<Record<string, { length?: number; ausente?: number }>>(docente, "datos_informe", [ana.estudiante, "2026-01-01", "2027-12-31"]);
     expect(d.asistencia.ausente).toBe(2);
     expect(d.actividades.length).toBeGreaterThanOrEqual(2);
     expect(d.alertas_abiertas.length).toBeGreaterThanOrEqual(1);

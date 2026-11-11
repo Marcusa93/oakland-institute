@@ -45,6 +45,19 @@ Para usar el panel hace falta un proyecto de Supabase:
 
 Con Docker disponible, el entorno local completo es `supabase start` + `supabase db reset` (aplica migraciones y semilla).
 
+## Despliegue en Vercel
+
+1. Importar el repositorio en el equipo de Vercel (Add New → Project). Framework: Next.js; no hace falta configurar comandos.
+2. Variables de entorno (Production y Preview), copiando los valores de `.env.local`:
+   `NEXT_PUBLIC_ENTORNO`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`,
+   `NEXT_PUBLIC_SITIO_URL` (la URL pública, p. ej. `https://oakland-institute.vercel.app`), `CRON_SECRET`, `DEMO_CLAVE`, `ASISTENTE_PROVEEDOR`.
+   Para la demo con acceso de un clic: `NEXT_PUBLIC_ENTORNO=desarrollo`. En producción real: `produccion` y sin `DEMO_CLAVE`.
+3. Desplegar. `vercel.json` programa la tarea diaria `/api/tareas/diaria` (revisión de alertas), protegida con `CRON_SECRET`.
+4. En Supabase → Authentication → URL Configuration: poner la URL pública como **Site URL** y agregar `https://<dominio>/**` en **Redirect URLs**.
+5. Antes de usar con personas reales: SMTP propio en Supabase (el correo integrado envía muy pocos mensajes por hora) y regenerar la clave secreta.
+
+Los enlaces de invitación usan la plantilla estándar de Supabase y llegan a `/auth/bienvenida`; los de recuperación, a `/auth/confirm`. Con SMTP propio se pueden personalizar las plantillas (ver `src/app/auth/confirm/route.ts`).
+
 ## Estructura
 
 ```

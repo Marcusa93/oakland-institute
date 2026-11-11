@@ -405,7 +405,7 @@ export async function invitarACrearCuenta(_previo: Resultado | null, formData: F
     return fallo("No se pueden enviar invitaciones: falta configurar la clave secreta en el servidor (SUPABASE_SECRET_KEY). Avisá a quien administra el sistema.");
   }
 
-  const invitacion = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: `${sitio}/auth/confirm` });
+  const invitacion = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: `${sitio}/auth/bienvenida` });
   if (invitacion.error || !invitacion.data?.user) {
     const m = invitacion.error?.message ?? "";
     if (/already|registered|exists/i.test(m)) return fallo("Ya existe un usuario con ese email. Revisá si el email corresponde a otra persona.");

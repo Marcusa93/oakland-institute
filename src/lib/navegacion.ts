@@ -1,37 +1,46 @@
 import { puede, type Accion, type Perfil, type Recurso } from "@/lib/permisos";
 
-export interface ItemMenu { href: string; etiqueta: string; recurso: Recurso; accion: Accion; solo?: Perfil[] }
+export type Grupo = "Mi cursada" | "Enseñanza" | "Comunicación" | "Gestión" | "Instituto";
+export const GRUPOS: Grupo[] = ["Mi cursada", "Enseñanza", "Comunicación", "Gestión", "Instituto"];
+
+export interface ItemMenu { href: string; etiqueta: string; grupo: Grupo; icono: string; recurso: Recurso; accion: Accion; solo?: Perfil[] }
 
 /** Orden = frecuencia de uso de cada rol. Se filtra con la matriz de permisos. */
 const ITEMS: ItemMenu[] = [
-  // Estudiante
-  { href: "/panel/practica", etiqueta: "Practicar", recurso: "practica", accion: "crear", solo: ["estudiante"] },
-  { href: "/panel/mis-actividades", etiqueta: "Mis actividades", recurso: "actividades", accion: "crear", solo: ["estudiante"] },
+  // Estudiante y familias
+  { href: "/panel/practica", etiqueta: "Practicar", grupo: "Mi cursada", icono: "🔥", recurso: "practica", accion: "crear", solo: ["estudiante"] },
+  { href: "/panel/mis-actividades", etiqueta: "Mis actividades", grupo: "Mi cursada", icono: "📝", recurso: "actividades", accion: "crear", solo: ["estudiante"] },
+  { href: "/panel/familia", etiqueta: "Cursada", grupo: "Mi cursada", icono: "🎒", recurso: "inscripciones", accion: "ver", solo: ["tutor", "estudiante"] },
+  { href: "/panel/cuenta", etiqueta: "Cuenta y pagos", grupo: "Mi cursada", icono: "💳", recurso: "cuenta_corriente", accion: "ver", solo: ["tutor", "estudiante"] },
   // Docente
-  { href: "/panel/mis-comisiones", etiqueta: "Asistencia", recurso: "asistencia", accion: "crear", solo: ["docente"] },
-  { href: "/panel/actividades", etiqueta: "Actividades", recurso: "actividades", accion: "aprobar", solo: ["docente", "direccion"] },
-  { href: "/panel/alertas", etiqueta: "Alertas", recurso: "alertas", accion: "ver" },
-  { href: "/panel/informes", etiqueta: "Informes", recurso: "informes", accion: "crear" },
-  { href: "/panel/banco", etiqueta: "Banco de práctica", recurso: "practica", accion: "editar", solo: ["docente", "direccion"] },
-  // Familias
-  { href: "/panel/familia", etiqueta: "Cursada", recurso: "inscripciones", accion: "ver", solo: ["tutor", "estudiante"] },
-  { href: "/panel/cuenta", etiqueta: "Cuenta y pagos", recurso: "cuenta_corriente", accion: "ver", solo: ["tutor", "estudiante"] },
-  // Gestión
-  { href: "/panel/consultas", etiqueta: "Consultas", recurso: "consultas", accion: "ver" },
-  { href: "/panel/estudiantes", etiqueta: "Estudiantes", recurso: "estudiantes", accion: "crear" },
-  { href: "/panel/comisiones", etiqueta: "Comisiones", recurso: "comisiones", accion: "crear" },
-  { href: "/panel/cobros", etiqueta: "Cobros", recurso: "cuenta_corriente", accion: "aprobar" },
-  { href: "/panel/gastos", etiqueta: "Gastos", recurso: "gastos", accion: "ver" },
-  { href: "/panel/docentes", etiqueta: "Docentes", recurso: "evaluacion_docente", accion: "ver" },
-  { href: "/panel/tablero", etiqueta: "Tablero", recurso: "tablero", accion: "ver" },
-  { href: "/panel/sitio", etiqueta: "Sitio web", recurso: "sitio", accion: "editar" },
+  { href: "/panel/mis-comisiones", etiqueta: "Asistencia", grupo: "Enseñanza", icono: "✅", recurso: "asistencia", accion: "crear", solo: ["docente"] },
+  { href: "/panel/actividades", etiqueta: "Actividades", grupo: "Enseñanza", icono: "📝", recurso: "actividades", accion: "aprobar", solo: ["docente", "direccion"] },
+  { href: "/panel/alertas", etiqueta: "Alertas", grupo: "Enseñanza", icono: "🚨", recurso: "alertas", accion: "ver" },
+  { href: "/panel/informes", etiqueta: "Informes", grupo: "Enseñanza", icono: "📊", recurso: "informes", accion: "crear" },
+  { href: "/panel/banco", etiqueta: "Banco de práctica", grupo: "Enseñanza", icono: "🧩", recurso: "practica", accion: "editar", solo: ["docente", "direccion"] },
+  { href: "/panel/docentes", etiqueta: "Mi evaluación", grupo: "Enseñanza", icono: "⭐", recurso: "evaluacion_docente", accion: "ver", solo: ["docente"] },
   // Todos
-  { href: "/panel/mensajes", etiqueta: "Mensajes", recurso: "mensajes", accion: "ver" },
-  { href: "/panel/avisos", etiqueta: "Avisos", recurso: "avisos", accion: "ver" },
+  { href: "/panel/mensajes", etiqueta: "Mensajes", grupo: "Comunicación", icono: "💬", recurso: "mensajes", accion: "ver" },
+  { href: "/panel/avisos", etiqueta: "Avisos", grupo: "Comunicación", icono: "📣", recurso: "avisos", accion: "ver" },
+  // Gestión
+  { href: "/panel/consultas", etiqueta: "Consultas", grupo: "Gestión", icono: "📥", recurso: "consultas", accion: "ver" },
+  { href: "/panel/estudiantes", etiqueta: "Estudiantes", grupo: "Gestión", icono: "🧑‍🎓", recurso: "estudiantes", accion: "crear" },
+  { href: "/panel/comisiones", etiqueta: "Comisiones", grupo: "Gestión", icono: "🗓️", recurso: "comisiones", accion: "crear" },
+  { href: "/panel/cobros", etiqueta: "Cobros", grupo: "Gestión", icono: "💰", recurso: "cuenta_corriente", accion: "aprobar" },
+  { href: "/panel/gastos", etiqueta: "Gastos", grupo: "Gestión", icono: "🧾", recurso: "gastos", accion: "ver" },
+  // Dirección
+  { href: "/panel/tablero", etiqueta: "Tablero", grupo: "Instituto", icono: "📈", recurso: "tablero", accion: "ver" },
+  { href: "/panel/docentes", etiqueta: "Docentes", grupo: "Instituto", icono: "👩‍🏫", recurso: "evaluacion_docente", accion: "crear" },
+  { href: "/panel/sitio", etiqueta: "Sitio web", grupo: "Instituto", icono: "🌐", recurso: "sitio", accion: "editar" },
 ];
 
 export function menuPara(perfiles: readonly Perfil[]): ItemMenu[] {
-  return ITEMS.filter(
-    (i) => puede(perfiles, i.recurso, i.accion) && (!i.solo || i.solo.some((p) => perfiles.includes(p))),
-  );
+  const vistos = new Set<string>();
+  return ITEMS.filter((i) => {
+    if (!puede(perfiles, i.recurso, i.accion)) return false;
+    if (i.solo && !i.solo.some((p) => perfiles.includes(p))) return false;
+    if (vistos.has(i.href)) return false; // una misma ruta aparece una sola vez
+    vistos.add(i.href);
+    return true;
+  });
 }
