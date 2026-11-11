@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/*
+ * Identidad visual parametrizada. Azul marino y rojo tomados de las piezas
+ * de Oakland Institute (valores aproximados desde imágenes: ajustar con el
+ * manual de marca o el logo original). La tipografía sigue siendo provisoria.
+ * Se cambia acá y en src/config/institucion.ts, sin tocar los componentes.
+ * Los pares texto/fondo cumplen contraste AA (≥ 4.5:1).
+ */
+:root {
+  --marca: #1c2a6b;
+  --marca-fuerte: #131d4f;
+  --marca-suave: #eaedf8;
+  --sobre-marca: #ffffff;
+  --acento: #c8102e;
+  --cielo: #8fb8ff;
+  --cielo-suave: #e3edff;
+  --pizarra: #f4f6fb;
+
+  --fondo: #f7f8fa;
+  --superficie: #ffffff;
+  --texto: #1a2230;
+  --texto-suave: #4c586b;
+  --borde: #d5dbe5;
+
+  --exito: #136c3a;
+  --exito-suave: #e4f4ea;
+  --alerta: #8a5300;
+  --alerta-suave: #fdf1dc;
+  --peligro: #b3261e;
+  --peligro-suave: #fde9e7;
+
+  --radio: 0.625rem;
+  --fuente-base: var(--font-marca), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@theme inline {
+  --color-marca: var(--marca);
+  --color-marca-fuerte: var(--marca-fuerte);
+  --color-marca-suave: var(--marca-suave);
+  --color-sobre-marca: var(--sobre-marca);
+  --color-acento: var(--acento);
+  --color-sobre-acento: #ffffff;
+  --color-cielo: var(--cielo);
+  --color-cielo-suave: var(--cielo-suave);
+  --color-pizarra: var(--pizarra);
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-texto: var(--texto);
+  --color-suave: var(--texto-suave);
+  --color-borde: var(--borde);
+  --color-exito: var(--exito);
+  --color-exito-suave: var(--exito-suave);
+  --color-alerta: var(--alerta);
+  --color-alerta-suave: var(--alerta-suave);
+  --color-peligro: var(--peligro);
+  --color-peligro-suave: var(--peligro-suave);
+  --radius-base: var(--radio);
+  --font-sans: var(--fuente-base);
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente-base);
+}
+
+/* Foco visible y consistente para navegación por teclado. */
+:focus-visible {
+  outline: 3px solid var(--marca);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.saltar-al-contenido {
+  position: absolute;
+  left: -9999px;
+}
+.saltar-al-contenido:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 50;
+  background: var(--superficie);
+  padding: 0.5rem 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Landing ---------- */
+
+@layer components {
+/* Globo de diálogo: la forma de la marca en toda la landing. */
+.globo {
+  position: relative;
+  border-radius: 2.25rem;
+}
+.globo::after {
+  content: "";
+  position: absolute;
+  width: 2.75rem;
+  height: 2.75rem;
+  background: inherit;
+  bottom: -1.1rem;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.globo-izq::after { left: 2.25rem; }
+.globo-der::after { right: 2.25rem; transform: scaleX(-1); }
+}
+
+/* Letras del título mientras se "traducen". */
+.letra-mezcla { color: var(--cielo); }
+
+@keyframes latido {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(200 16 46 / 0.45); }
+  50% { box-shadow: 0 0 0 0.6rem rgb(200 16 46 / 0); }
+}
+.latido { animation: latido 2.4s ease-out infinite; }
+
+@keyframes aparece-bloque {
+  from { transform: scaleY(0.2); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+.bloque-semana { transform-origin: top; animation: aparece-bloque 0.45s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes escribiendo {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+.punto-escribiendo { animation: escribiendo 1s ease-in-out infinite; }

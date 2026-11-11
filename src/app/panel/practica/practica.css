@@ -1,0 +1,124 @@
+/*
+ * Práctica gamificada: micro-animaciones con sentido (aparece la respuesta,
+ * sube la XP, se desbloquea una medalla). Todo se apaga con
+ * prefers-reduced-motion (además de la regla global de globals.css).
+ */
+
+.pr-tono-marca { --pr-color: var(--marca); --pr-suave: var(--marca-suave); --pr-texto: #fff; }
+.pr-tono-acento { --pr-color: var(--acento); --pr-suave: var(--peligro-suave); --pr-texto: #fff; }
+.pr-tono-cielo { --pr-color: #2f6fd6; --pr-suave: var(--cielo-suave); --pr-texto: #fff; }
+
+/* Anillo de progreso: se dibuja desde cero hasta el valor. */
+@keyframes pr-anillo {
+  from { stroke-dashoffset: var(--pr-circ); }
+  to { stroke-dashoffset: var(--pr-off); }
+}
+.pr-anillo {
+  stroke-dasharray: var(--pr-circ);
+  stroke-dashoffset: var(--pr-off);
+  animation: pr-anillo 1.1s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay: var(--pr-retraso, 0ms);
+}
+
+@keyframes pr-barra { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.pr-barra { transform-origin: left; animation: pr-barra 0.9s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes pr-aparece {
+  from { transform: translateY(1rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.pr-aparece { animation: pr-aparece 0.35s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes pr-entra {
+  from { transform: translateX(1.5rem); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.pr-entra { animation: pr-entra 0.35s cubic-bezier(.2,.8,.2,1) both; }
+
+/* "+15 XP" que sube y se desvanece. */
+@keyframes pr-xp-sube {
+  0% { transform: translateY(0.5rem) scale(0.8); opacity: 0; }
+  20% { transform: translateY(0) scale(1.1); opacity: 1; }
+  70% { transform: translateY(-1.2rem) scale(1); opacity: 1; }
+  100% { transform: translateY(-2.2rem); opacity: 0; }
+}
+.pr-xp-sube { animation: pr-xp-sube 1.4s ease-out both; }
+
+@keyframes pr-pulso {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+}
+.pr-pulso { animation: pr-pulso 0.5s ease-out; }
+
+/* Error: un movimiento corto, no un castigo. */
+@keyframes pr-duda {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.pr-duda { animation: pr-duda 0.3s ease-in-out 2; }
+
+@keyframes pr-ficha {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.pr-ficha { animation: pr-ficha 0.2s cubic-bezier(.2,.8,.2,1.4) both; }
+
+@keyframes pr-llama {
+  0%, 100% { transform: rotate(-3deg) scale(1); }
+  50% { transform: rotate(3deg) scale(1.08); }
+}
+.pr-llama { display: inline-block; transform-origin: 50% 90%; animation: pr-llama 1.8s ease-in-out infinite; }
+
+/* Medalla nueva. */
+@keyframes pr-medalla {
+  0% { transform: scale(0.2) rotate(-20deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+.pr-medalla { animation: pr-medalla 0.7s cubic-bezier(.2,.8,.2,1.2) both; }
+
+@keyframes pr-rayos { to { transform: rotate(360deg); } }
+.pr-rayos {
+  background: repeating-conic-gradient(from 0deg, rgb(143 184 255 / 0.55) 0 12deg, transparent 12deg 30deg);
+  border-radius: 9999px;
+  animation: pr-rayos 9s linear infinite;
+}
+
+@keyframes pr-chispa {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.4); opacity: 0; }
+}
+.pr-chispa {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+  animation: pr-chispa 1.1s cubic-bezier(.1,.7,.3,1) both;
+}
+
+.pr-dialogo::backdrop { background: rgb(19 29 79 / 0.55); }
+.pr-dialogo[open] { animation: pr-aparece 0.3s ease-out both; }
+
+/* Camino de habilidades: línea punteada que une los nodos. */
+.pr-camino { position: relative; }
+.pr-camino::before {
+  content: "";
+  position: absolute;
+  top: 2.5rem;
+  bottom: 2.5rem;
+  left: 2.25rem;
+  margin-left: -2px;
+  border-left: 4px dotted var(--borde);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-anillo, .pr-barra, .pr-aparece, .pr-entra, .pr-xp-sube, .pr-pulso, .pr-duda, .pr-ficha,
+  .pr-llama, .pr-medalla, .pr-rayos, .pr-chispa, .pr-dialogo[open] {
+    animation: none !important;
+  }
+  .pr-xp-sube { opacity: 1; }
+  .pr-chispa { display: none; }
+}
