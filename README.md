@@ -45,6 +45,19 @@ Para usar el panel hace falta un proyecto de Supabase:
 
 Con Docker disponible, el entorno local completo es `supabase start` + `supabase db reset` (aplica migraciones y semilla).
 
+## Despliegue en el VPS (actual)
+
+Producción corre en el VPS de Digital Amenities (Ubuntu + Caddy + systemd), igual que las demás apps del servidor:
+usuario `oakland`, código en `/home/oakland/oakland-institute`, variables en `/etc/oakland/app.env`,
+servicio `oakland.service` en `127.0.0.1:3140`, sitio en `/etc/caddy/oakland.caddy` y tarea diaria en `/etc/cron.d/oakland`.
+
+```bash
+sh scripts/vps/subir-variables.sh <dominio>                      # copia las variables (sin la contraseña de la base)
+ssh mr-vps 'bash -s' -- <dominio> [www] < scripts/vps/instalar.sh  # instala o actualiza desde GitHub, compila y recarga Caddy
+```
+
+Para publicar cambios: push a `main` y volver a correr `instalar.sh` con el mismo dominio.
+
 ## Despliegue en Vercel
 
 1. Importar el repositorio en el equipo de Vercel (Add New → Project). Framework: Next.js; no hace falta configurar comandos.
