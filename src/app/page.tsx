@@ -9,6 +9,7 @@ import { enIngles, enlaceWhatsapp, obtenerContenidoSitio } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { BotonOaklandAI } from "./landing/boton-ai";
 import { BuscadorCursos } from "./landing/buscador-cursos";
+import { ConversacionPortada } from "./landing/conversacion";
 import { TestNivel } from "./landing/test-nivel";
 import { TituloBilingue } from "./landing/titulo-bilingue";
 import { IdiomaProvider, SelectorIdioma } from "./landing/idioma";
@@ -96,23 +97,14 @@ export default async function Landing() {
                 <BotonOaklandAI className="inline-flex min-h-12 items-center rounded-full border border-white/40 px-6 text-lg font-semibold text-white hover:bg-white/10" />
               </div>
               <p className="mt-6 max-w-sm text-sm text-white/70">
-                <T es="Pasá el cursor sobre un título o un botón para ver su traducción, o cambiá toda la página con ES / EN."
-                  en="Hover over a heading or button to see it in Spanish, or switch the whole page with ES / EN." />
+                <span className="hidden [@media(hover:hover)]:inline"><T es="Pasá el cursor sobre un título o un botón para ver su traducción, o cambiá toda la página con ES / EN."
+                  en="Hover over a heading or button to see it in Spanish, or switch the whole page with ES / EN." /></span>
+                <span className="[@media(hover:hover)]:hidden"><T es="Tocá un título para verlo en inglés, o mantené apretado un botón. También podés cambiar toda la página con ES / EN."
+                  en="Tap a heading to see it in Spanish, or press and hold a button. You can also switch the whole page with ES / EN." /></span>
               </p>
             </div>
 
-            <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-              <div className="globo globo-izq overflow-visible bg-white p-2 shadow-[0_30px_60px_-20px_rgb(0_0_0/0.45)]">
-                <Image src="/fotos/clase-adultos.webp" alt="Clase de inglés para adultos en un aula del instituto" width={960} height={640} priority
-                  sizes="(min-width: 1024px) 480px, 90vw" className="aspect-[4/3] w-full rounded-[1.9rem] object-cover" />
-              </div>
-              <p lang="en" className="globo globo-der absolute -bottom-8 right-2 bg-acento px-5 py-3 text-lg font-bold text-white shadow-lg sm:-right-4">
-                Ready to start?
-              </p>
-              <p className="globo globo-izq absolute -left-3 -top-6 bg-cielo px-5 py-3 text-lg font-bold text-marca-fuerte shadow-lg sm:-left-8">
-                ¿Arrancamos?
-              </p>
-            </div>
+            <ConversacionPortada />
           </div>
         </section>
 

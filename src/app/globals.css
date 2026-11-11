@@ -99,10 +99,13 @@ body {
 .globo {
   position: relative;
   border-radius: 2.25rem;
+  /* Contexto propio: la colita queda detrás del texto, nunca encima. */
+  isolation: isolate;
 }
 .globo::after {
   content: "";
   position: absolute;
+  z-index: -1;
   width: 2.75rem;
   height: 2.75rem;
   background: inherit;
@@ -133,3 +136,23 @@ body {
   30% { transform: translateY(-4px); opacity: 1; }
 }
 .punto-escribiendo { animation: escribiendo 1s ease-in-out infinite; }
+
+/* Portada: la foto flota y los globos entran como mensajes. */
+@keyframes flotar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.flotar { animation: flotar 6s ease-in-out infinite; }
+
+@keyframes burbuja-entra {
+  0% { opacity: 0; transform: scale(0.6) translateY(8px); }
+  70% { opacity: 1; transform: scale(1.04) translateY(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.burbuja-entra { animation: burbuja-entra 0.45s cubic-bezier(.2, .9, .3, 1.2) both; }
+.globo-izq.burbuja-entra { transform-origin: 2.5rem 100%; }
+.globo-der.burbuja-entra { transform-origin: calc(100% - 2.5rem) 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .flotar, .burbuja-entra { animation: none; }
+}

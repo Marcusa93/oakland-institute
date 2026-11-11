@@ -79,27 +79,109 @@ export function Traducible({ es, en, activo, className = "" }: { es: string; en:
   useEffect(() => {
     const raiz = ref.current?.closest<HTMLElement>("a, button, summary, h2, h3, li, label, [data-traducir]") ?? ref.current?.parentElement;
     if (!raiz) return;
+    // En botones y enlaces el toque ya hace su acción: ahí se traduce
+    // manteniendo el dedo apretado. En títulos y textos alcanza un toque.
+    const interactivo = raiz.matches("a, button, summary, label");
     let t: number | undefined;
+    let sostenido: number | undefined;
+    let ultimoToque = 0;
+    let inicio: { x: number; y: number } | null = null;
+    let fueSostenido = false;
+
     const programar = (valor: boolean, ms: number) => {
       window.clearTimeout(t);
       t = window.setTimeout(() => setApuntado(valor), ms);
     };
+
+    // Mouse y teclado: como antes.
     const entrar = (e: Event) => {
-      // En pantallas táctiles el toque ya hace su acción: no traducimos al tocar.
       if (e instanceof PointerEvent && e.pointerType === "touch") return;
+      if (e.type === "focusin" && Date.now() - ultimoToque < 800) return; // el toque también enfoca
       programar(true, ESPERA_ENTRAR);
     };
-    const salir = () => programar(false, ESPERA_SALIR);
+    const salir = (e: Event) => {
+      if (e instanceof PointerEvent && e.pointerType === "touch") return;
+      programar(false, ESPERA_SALIR);
+    };
+
+    // Táctil.
+    const tocar = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      ultimoToque = Date.now();
+      inicio = { x: e.clientX, y: e.clientY };
+      fueSostenido = false;
+      if (interactivo) {
+        window.clearTimeout(sostenido);
+        sostenido = window.setTimeout(() => {
+          fueSostenido = true;
+          window.clearTimeout(t);
+          setApuntado(true);
+          navigator.vibrate?.(10);
+        }, 450);
+      }
+    };
+    const mover = (e: PointerEvent) => {
+      if (e.pointerType !== "touch" || !inicio) return;
+      // Si el dedo se desplaza, es scroll: no se traduce.
+      if (Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) > 10) {
+        window.clearTimeout(sostenido);
+        inicio = null;
+      }
+    };
+    const soltar = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      window.clearTimeout(sostenido);
+      if (interactivo) {
+        if (fueSostenido) programar(false, 1600);
+      } else if (inicio) {
+        setApuntado((v) => !v);
+        programar(false, 4000);
+      }
+      inicio = null;
+    };
+    const cancelar = () => {
+      window.clearTimeout(sostenido);
+      inicio = null;
+    };
+    // Después de un toque sostenido no se dispara la acción del botón.
+    const clic = (e: MouseEvent) => {
+      if (fueSostenido) {
+        e.preventDefault();
+        e.stopPropagation();
+        fueSostenido = false;
+      }
+    };
+    const menuContextual = (e: Event) => {
+      if (interactivo && Date.now() - ultimoToque < 1500) e.preventDefault();
+    };
+
+    if (interactivo) {
+      raiz.style.setProperty("-webkit-touch-callout", "none");
+      raiz.style.userSelect = "none";
+    }
     raiz.addEventListener("pointerenter", entrar);
     raiz.addEventListener("pointerleave", salir);
     raiz.addEventListener("focusin", entrar);
     raiz.addEventListener("focusout", salir);
+    raiz.addEventListener("pointerdown", tocar);
+    raiz.addEventListener("pointermove", mover);
+    raiz.addEventListener("pointerup", soltar);
+    raiz.addEventListener("pointercancel", cancelar);
+    raiz.addEventListener("click", clic, true);
+    raiz.addEventListener("contextmenu", menuContextual);
     return () => {
       window.clearTimeout(t);
+      window.clearTimeout(sostenido);
       raiz.removeEventListener("pointerenter", entrar);
       raiz.removeEventListener("pointerleave", salir);
       raiz.removeEventListener("focusin", entrar);
       raiz.removeEventListener("focusout", salir);
+      raiz.removeEventListener("pointerdown", tocar);
+      raiz.removeEventListener("pointermove", mover);
+      raiz.removeEventListener("pointerup", soltar);
+      raiz.removeEventListener("pointercancel", cancelar);
+      raiz.removeEventListener("click", clic, true);
+      raiz.removeEventListener("contextmenu", menuContextual);
     };
   }, []);
 
