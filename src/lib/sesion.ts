@@ -73,6 +73,8 @@ export function mensajeDeError(error: { message?: string } | null | undefined): 
     [/MATRICULA_NO_ACTIVA/, "Esa inscripción ya no está activa."],
     [/MISMA_COMISION/, "El estudiante ya está en esa comisión."],
     [/ULTIMA_DIRECCION/, "Debe quedar al menos una cuenta de dirección."],
+    [/ARCHIVO_YA_CARGADO/, "Ese material ya tiene su archivo. Para cambiarlo, cargá un material nuevo."],
+    [/ARCHIVO_INVALIDO/, "No encontramos el archivo subido o el formato no es compatible (PDF, foto o Word)."],
     [/ACTIVIDAD_NO_DISPONIBLE/, "Esa actividad no está disponible."],
     [/FUERA_DE_PLAZO/, "La actividad está fuera de plazo."],
     [/YA_CORREGIDA/, "Esa entrega ya fue corregida."],

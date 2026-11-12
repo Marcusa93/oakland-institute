@@ -47,11 +47,11 @@ describe("matriz de permisos", () => {
   });
   it("el menú muestra a cada rol solo sus secciones", () => {
     const docente = menuPara(["docente"]).map((i) => i.href);
-    expect(docente).toEqual(expect.arrayContaining(["/panel/mis-comisiones", "/panel/actividades", "/panel/alertas", "/panel/informes", "/panel/mensajes"]));
+    expect(docente).toEqual(expect.arrayContaining(["/panel/mis-comisiones", "/panel/actividades", "/panel/alertas", "/panel/informes", "/panel/mensajes", "/panel/biblioteca"]));
     expect(docente).not.toEqual(expect.arrayContaining(["/panel/cobros"]));
     expect(docente.some((h) => ["/panel/cobros", "/panel/cuenta", "/panel/tablero", "/panel/gastos", "/panel/sitio"].includes(h))).toBe(false);
     const tutor = menuPara(["tutor"]).map((i) => i.href);
-    expect(tutor).toEqual(["/panel/familia", "/panel/cuenta", "/panel/mensajes", "/panel/avisos"]);
+    expect(tutor).toEqual(["/panel/familia", "/panel/material", "/panel/cuenta", "/panel/mensajes", "/panel/avisos"]);
     expect(menuPara(["estudiante"]).map((i) => i.href).slice(0, 2)).toEqual(["/panel/practica", "/panel/mis-actividades"]);
     expect(menuPara(["administracion"]).map((i) => i.href)).not.toContain("/panel/tablero");
     expect(menuPara(["direccion"]).map((i) => i.href)).toEqual(expect.arrayContaining(["/panel/tablero", "/panel/docentes", "/panel/sitio"]));

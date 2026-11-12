@@ -11,10 +11,12 @@ const ITEMS: ItemMenu[] = [
   { href: "/panel/practica", etiqueta: "Practicar", grupo: "Mi cursada", icono: "🔥", recurso: "practica", accion: "crear", solo: ["estudiante"] },
   { href: "/panel/mis-actividades", etiqueta: "Mis actividades", grupo: "Mi cursada", icono: "📝", recurso: "actividades", accion: "crear", solo: ["estudiante"] },
   { href: "/panel/familia", etiqueta: "Cursada", grupo: "Mi cursada", icono: "🎒", recurso: "inscripciones", accion: "ver", solo: ["tutor", "estudiante"] },
+  { href: "/panel/material", etiqueta: "Biblioteca", grupo: "Mi cursada", icono: "📚", recurso: "biblioteca", accion: "ver", solo: ["estudiante", "tutor"] },
   { href: "/panel/cuenta", etiqueta: "Cuenta y pagos", grupo: "Mi cursada", icono: "💳", recurso: "cuenta_corriente", accion: "ver", solo: ["tutor", "estudiante"] },
   // Docente
   { href: "/panel/mis-comisiones", etiqueta: "Asistencia", grupo: "Enseñanza", icono: "✅", recurso: "asistencia", accion: "crear", solo: ["docente"] },
   { href: "/panel/actividades", etiqueta: "Actividades", grupo: "Enseñanza", icono: "📝", recurso: "actividades", accion: "aprobar", solo: ["docente", "direccion"] },
+  { href: "/panel/biblioteca", etiqueta: "Biblioteca", grupo: "Enseñanza", icono: "📚", recurso: "biblioteca", accion: "crear", solo: ["docente", "direccion", "administracion"] },
   { href: "/panel/alertas", etiqueta: "Alertas", grupo: "Enseñanza", icono: "🚨", recurso: "alertas", accion: "ver" },
   { href: "/panel/informes", etiqueta: "Informes", grupo: "Enseñanza", icono: "📊", recurso: "informes", accion: "crear" },
   { href: "/panel/banco", etiqueta: "Banco de práctica", grupo: "Enseñanza", icono: "🧩", recurso: "practica", accion: "editar", solo: ["docente", "direccion"] },

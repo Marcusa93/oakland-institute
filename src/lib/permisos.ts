@@ -119,6 +119,13 @@ export const MATRIZ = {
     docente: { ver: "sus_comisiones", crear: "todo", editar: "todo", aprobar: "todo" }, // banco de ejercicios
     direccion: { ver: "todo", crear: "todo", editar: "todo", aprobar: "todo" },
   },
+  biblioteca: {
+    estudiante: { ver: "sus_comisiones" }, // lo compartido con su comisión
+    tutor: { ver: "vinculados" },
+    docente: { ver: "todo", crear: "todo", editar: "propio" }, // la biblioteca es del equipo
+    administracion: { ver: "todo", crear: "todo", editar: "todo" },
+    direccion: { ver: "todo", crear: "todo", editar: "todo" },
+  },
   alertas: {
     docente: { ver: "sus_comisiones", editar: "sus_comisiones" },
     administracion: { ver: "todo", editar: "todo" },
