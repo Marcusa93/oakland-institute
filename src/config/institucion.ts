@@ -9,11 +9,13 @@ export const institucion = {
   nombreProvisorio: false,
   localidad: "Monteros, Tucumán",
   lema: "Inglés para todas las edades, con acompañamiento cercano.",
+  // Datos de las piezas del instituto (nov. 2026). El WhatsApp es el que el
+  // instituto usa para todo; se edita desde el panel (Sitio web → Contacto).
   contacto: {
     telefono: null as string | null,
-    whatsapp: null as string | null,
+    whatsapp: "+54 9 3863 41-4937" as string | null,
     email: null as string | null,
-    direccion: null as string | null,
+    direccion: "Leandro Aráoz 39, planta alta" as string | null,
   },
   /**
    * Certificaciones efectivamente ofrecidas. Vacío hasta que el instituto las

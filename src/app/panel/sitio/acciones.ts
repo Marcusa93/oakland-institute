@@ -8,7 +8,7 @@ import { CLAVES_SITIO, esquemasSitio } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 
 const NOMBRE: Record<(typeof CLAVES_SITIO)[number], string> = {
-  portada: "Portada", pasos: "Pasos", preguntas: "Preguntas frecuentes", contacto: "Contacto", anuncio: "Anuncio", certificaciones: "Certificaciones",
+  portada: "Portada", grupos: "Grupos por edad", diferenciales: "Diferenciales", propuestas: "Propuestas", pasos: "Pasos", preguntas: "Preguntas frecuentes", contacto: "Contacto", anuncio: "Anuncio", certificaciones: "Certificaciones",
 };
 
 /** Publica una sección de la landing (upsert en sitio_contenido). La base exige gestión. */

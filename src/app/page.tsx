@@ -5,11 +5,12 @@ import { Marca } from "@/componentes/marca";
 import { OaklandAI } from "@/componentes/oakland-ai";
 import { entorno, institucion, supabaseConfigurado } from "@/config/institucion";
 import { obtenerOferta } from "@/lib/oferta";
-import { enIngles, enlaceWhatsapp, obtenerContenidoSitio } from "@/lib/sitio";
+import { enIngles, enlaceMapa, enlaceWhatsapp, obtenerContenidoSitio } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { BotonOaklandAI } from "./landing/boton-ai";
 import { BuscadorCursos } from "./landing/buscador-cursos";
 import { ConversacionPortada } from "./landing/conversacion";
+import { EscaleraGrupos } from "./landing/escalera";
 import { TestNivel } from "./landing/test-nivel";
 import { TituloBilingue } from "./landing/titulo-bilingue";
 import { IdiomaProvider, SelectorIdioma } from "./landing/idioma";
@@ -33,8 +34,11 @@ async function textoPrivacidad() {
 export default async function Landing() {
   const [{ cursos, origen }, privacidad, sitio] = await Promise.all([obtenerOferta(), textoPrivacidad(), obtenerContenidoSitio()]);
   // Textos editables desde el panel (Sitio web); si no hay nada cargado, los de siempre.
-  const { portada, pasos: PASOS, preguntas: PREGUNTAS, contacto: c, anuncio, certificaciones } = sitio;
+  const { portada, pasos: PASOS, preguntas: PREGUNTAS, contacto: c, anuncio, certificaciones, grupos, diferenciales, propuestas } = sitio;
   const whatsapp = enlaceWhatsapp(c.whatsapp);
+  const whatsappConsulta = enlaceWhatsapp(c.whatsapp, "¡Hola Oakland! Quiero consultar por los cursos de inglés.");
+  const mapa = enlaceMapa(c.direccion);
+  const instagram = c.redes.find((r) => /instagram/i.test(r.nombre));
   const pista = (
     <>
       <span className="hidden [@media(hover:hover)]:inline"><T es="Pasá el cursor sobre un título o un botón para verlo en inglés."
@@ -73,9 +77,16 @@ export default async function Landing() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3">
           <Link href="/" aria-label={`${institucion.nombre}, inicio`}><Marca /></Link>
           <nav aria-label="Principal" className="flex items-center gap-1.5 text-sm font-semibold sm:gap-4">
-            <a href="#cursos" className="hidden min-h-11 items-center whitespace-nowrap px-2 hover:text-acento md:inline-flex"><T es="Cursos" en="Courses" /></a>
+            <a href="#cursos" className="hidden min-h-11 items-center whitespace-nowrap px-2 hover:text-acento xl:inline-flex"><T es="Horarios" en="Schedules" /></a>
             <a href="#test" className="hidden min-h-11 items-center whitespace-nowrap px-2 hover:text-acento md:inline-flex"><T es="Test de nivel" en="Level test" /></a>
-            <a href="#consulta" className="latido hidden min-h-10 items-center whitespace-nowrap rounded-full bg-acento px-4 text-white lg:inline-flex"><T es="Inscripciones 2027 abiertas" en="2027 enrolment is open" /></a>
+            <a href="#grupos" className="hidden min-h-11 items-center whitespace-nowrap px-2 hover:text-acento md:inline-flex"><T es="Grupos" en="Groups" /></a>
+            {whatsappConsulta ? (
+              <a href={whatsappConsulta} target="_blank" rel="noopener noreferrer" className="latido hidden min-h-10 items-center gap-2 whitespace-nowrap rounded-full bg-acento px-4 text-white lg:inline-flex">
+                <T es="Escribinos por WhatsApp" en="Message us on WhatsApp" />
+              </a>
+            ) : (
+              <a href="#consulta" className="latido hidden min-h-10 items-center whitespace-nowrap rounded-full bg-acento px-4 text-white lg:inline-flex"><T es="Hacé tu consulta" en="Ask us" /></a>
+            )}
             <SelectorIdioma />
             <Link href="/ingresar" className="inline-flex min-h-11 items-center rounded-full border border-borde bg-white px-3 hover:border-marca sm:px-4"><T es="Ingresar" en="Log in" /></Link>
           </nav>
@@ -107,7 +118,7 @@ export default async function Landing() {
                 <T es={portada.subtitulo.es} en={enIngles(portada.subtitulo)} />
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <a href="#cursos" className="inline-flex min-h-13 items-center rounded-full bg-acento px-7 text-lg font-bold text-white shadow-[0_10px_30px_-10px_rgb(200_16_46/0.8)] transition-transform hover:-translate-y-0.5 hover:bg-[#a90d26] motion-reduce:transition-none"><T es="Buscar mi curso" en="Find my course" /></a>
+                <a href="#grupos" className="inline-flex min-h-13 items-center rounded-full bg-acento px-7 text-lg font-bold text-white shadow-[0_10px_30px_-10px_rgb(200_16_46/0.8)] transition-transform hover:-translate-y-0.5 hover:bg-[#a90d26] motion-reduce:transition-none"><T es="Buscar mi curso" en="Find my course" /></a>
                 <a href="#test" className="inline-flex min-h-13 items-center rounded-full border-2 border-white/30 px-7 text-lg font-semibold text-white transition-colors hover:border-white hover:bg-white/10"><T es="Probar mi nivel" en="Test my level" /></a>
               </div>
               <BotonOaklandAI conIcono className="mt-5 inline-flex min-h-11 items-center gap-2.5 rounded-full py-1 pr-3 text-base font-semibold text-white/85 underline-offset-4 hover:text-white hover:underline" />
@@ -117,11 +128,13 @@ export default async function Landing() {
           </div>
         </section>
 
-        <section id="cursos" aria-labelledby="titulo-cursos" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20">
+        {grupos.length ? <EscaleraGrupos tramos={grupos} diferenciales={diferenciales} /> : null}
+
+        <section id="cursos" aria-labelledby="titulo-cursos" className={`mx-auto max-w-6xl scroll-mt-20 px-4 pb-20 ${grupos.length ? "pt-4" : "pt-20"}`}>
           <h2 id="titulo-cursos" className="max-w-2xl text-4xl font-extrabold tracking-tight text-marca-fuerte sm:text-5xl [font-variation-settings:'opsz'_72]">
-            <T es="Encontrá tu grupo en un toque" en="Find your group in one tap" />
+            <T es="Mirá cómo quedaría tu semana" en="See what your week would look like" />
           </h2>
-          <p data-traducir className="mt-3 max-w-xl text-lg text-suave"><T es="Elegí para quién es y mirá cómo quedaría la semana." en="Choose who it's for and see what the week looks like." /></p>
+          <p data-traducir className="mt-3 max-w-xl text-lg text-suave"><T es="Elegí para quién es y te mostramos días y horarios." en="Choose who it's for and we'll show you days and times." /></p>
           <div className="mt-10">
             {cursos.length === 0 ? (
               <div className="rounded-[2.25rem] bg-white p-8">
@@ -150,6 +163,27 @@ export default async function Landing() {
             <TestNivel />
           </div>
         </section>
+
+        {propuestas.length ? (
+          <section id="propuestas" aria-labelledby="titulo-propuestas" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-20">
+            <h2 id="titulo-propuestas" className="text-4xl font-extrabold tracking-tight text-marca-fuerte sm:text-5xl [font-variation-settings:'opsz'_72]"><T es="Además de los cursos" en="Beyond the courses" /></h2>
+            <ul className="mt-12 grid gap-x-10 gap-y-12 md:grid-cols-2">
+              {propuestas.map((p, i) => (
+                <li key={`${i}-${p.pregunta.es}`} className="flex flex-col gap-5">
+                  <p className="globo globo-izq w-fit max-w-[90%] bg-white px-5 py-3 text-lg font-bold text-marca-fuerte ring-1 ring-borde">
+                    <T es={p.pregunta.es} en={enIngles(p.pregunta)} />
+                  </p>
+                  <div className="globo globo-der ml-auto w-fit max-w-[92%] bg-marca px-5 py-4 text-white">
+                    <p data-traducir><T es={p.respuesta.es} en={enIngles(p.respuesta)} /></p>
+                    {p.cuando.es ? (
+                      <p data-traducir className="mt-3 inline-flex rounded-full bg-cielo px-3 py-1 text-sm font-bold text-marca-fuerte"><T es={p.cuando.es} en={enIngles(p.cuando)} /></p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section aria-labelledby="titulo-pasos" className="mx-auto max-w-6xl px-4 py-20">
           <h2 id="titulo-pasos" className="text-4xl font-extrabold tracking-tight text-marca-fuerte sm:text-5xl [font-variation-settings:'opsz'_72]"><T es="Cómo es empezar" en="How getting started works" /></h2>
@@ -187,7 +221,44 @@ export default async function Landing() {
             <div aria-hidden className="margen-cuaderno left-6 opacity-60 sm:left-12" />
             <div className="relative">
               <h2 id="titulo-consulta" className="text-4xl font-extrabold tracking-tight text-marca-fuerte sm:text-5xl [font-variation-settings:'opsz'_72]"><T es="Escribinos" en="Write to us" /></h2>
-              <p data-traducir className="mt-4 text-lg text-suave"><T es="Te respondemos por el medio que prefieras. Pedimos solo lo necesario para contactarte." en="We'll reply however you prefer. We only ask for what we need to reach you." /></p>
+              <p data-traducir className="mt-4 text-lg text-suave"><T es="La forma más rápida es WhatsApp. También podés dejarnos tu consulta acá o pasar por el instituto." en="WhatsApp is the fastest way. You can also leave your question here or drop by." /></p>
+              {whatsappConsulta ? (
+                <a href={whatsappConsulta} target="_blank" rel="noopener noreferrer"
+                  className="mt-6 flex min-h-14 items-center gap-3 rounded-full bg-[#1f7a4d] py-2 pl-2 pr-6 text-white shadow-[0_12px_30px_-12px_rgb(31_122_77/0.8)] transition-transform hover:-translate-y-0.5 hover:bg-[#17603c] motion-reduce:transition-none">
+                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-white/15">
+                    <svg viewBox="0 0 24 24" className="size-5" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.6-.3Z" /></svg>
+                  </span>
+                  <span className="leading-tight">
+                    <span className="block font-bold"><T es="Escribinos por WhatsApp" en="Message us on WhatsApp" /></span>
+                    <span className="block text-sm text-white/85">{c.whatsapp.replace(/^\+54\s?9\s?/, "")}</span>
+                  </span>
+                </a>
+              ) : null}
+              {c.direccion || c.horario.es ? (
+                <dl className="mt-6 space-y-3 text-base">
+                  {c.direccion ? (
+                    <div>
+                      <dt className="text-sm font-semibold text-suave"><T es="Dónde estamos" en="Where we are" /></dt>
+                      <dd className="font-semibold">
+                        {c.direccion}, {institucion.localidad}
+                        {mapa ? <> · <a href={mapa} target="_blank" rel="noopener noreferrer" className="text-marca underline underline-offset-4 hover:no-underline"><T es="Cómo llegar" en="Directions" /></a></> : null}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {c.horario.es ? (
+                    <div>
+                      <dt className="text-sm font-semibold text-suave"><T es="Atención presencial" en="Office hours" /></dt>
+                      <dd className="font-semibold"><T es={c.horario.es} en={enIngles(c.horario)} /></dd>
+                    </div>
+                  ) : null}
+                  {instagram ? (
+                    <div>
+                      <dt className="text-sm font-semibold text-suave">Instagram</dt>
+                      <dd><a href={instagram.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-marca underline underline-offset-4 hover:no-underline">@{instagram.url.replace(/\/$/, "").split("/").pop()}</a></dd>
+                    </div>
+                  ) : null}
+                </dl>
+              ) : null}
               {PREGUNTAS.length > 0 ? <div className="mt-10">
                 {PREGUNTAS.map(({ pregunta: p, respuesta: r }, i) => (
                   <details key={`${i}-${p.es}`} className="group py-1">
@@ -211,6 +282,7 @@ export default async function Landing() {
             <p className="font-semibold text-white">{institucion.nombre}</p>
             <p>{institucion.localidad}</p>
             <p className="mt-1">{[c.direccion, c.telefono, c.email].filter(Boolean).join(" · ") || "Datos de contacto a confirmar."}</p>
+            {c.horario.es ? <p className="mt-1"><T es={`Atención: ${c.horario.es}`} en={`Office hours: ${enIngles(c.horario)}`} /></p> : null}
             {whatsapp || c.redes.length > 0 ? (
               <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                 {whatsapp ? <li><a href={whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-cielo hover:underline">WhatsApp</a></li> : null}

@@ -8,6 +8,9 @@ import { publicarSeccion } from "./acciones";
 
 const SECCIONES: Array<{ clave: ClaveSitio; nombre: string; ayuda: string }> = [
   { clave: "portada", nombre: "Portada", ayuda: "El título grande y la frase de la primera pantalla." },
+  { clave: "grupos", nombre: "Grupos", ayuda: "Los grupos por edad, agrupados en tramos. En el sitio se ven como una escalera: el primer tramo abajo." },
+  { clave: "diferenciales", nombre: "Diferenciales", ayuda: "Frases cortas sobre lo que distingue al instituto. Solo cosas confirmadas." },
+  { clave: "propuestas", nombre: "Propuestas", ayuda: "Lo que hay además de los cursos (speaking club, refuerzo, clases individuales…), como pregunta y respuesta." },
   { clave: "pasos", nombre: "Pasos", ayuda: "Cómo es empezar: el recorrido numerado, en orden." },
   { clave: "preguntas", nombre: "Preguntas", ayuda: "Preguntas frecuentes junto al formulario de consulta." },
   { clave: "contacto", nombre: "Contacto", ayuda: "Datos del pie de página." },
@@ -95,6 +98,32 @@ function VistaPrevia({ clave, c, idioma }: { clave: ClaveSitio; c: ContenidoSiti
           <p className="mt-3 text-white/85">{t(c.portada.subtitulo)}</p>
         </div>
       );
+    case "grupos":
+      return c.grupos.length === 0 ? <p className="text-sm text-suave">Sin grupos: la sección no aparece.</p> : (
+        <div className="space-y-3">
+          {c.grupos.map((tr, i) => (
+            <div key={i}>
+              <p className="font-bold">{t(tr.tramo)}</p>
+              <p className="mt-1 flex flex-wrap gap-1.5">{tr.grupos.map((x, j) => <span key={j} className="rounded-full bg-marca-suave px-2.5 py-0.5 text-sm">{x.nombre}{t(x.edad) ? ` · ${t(x.edad)}` : ""}</span>)}</p>
+            </div>
+          ))}
+        </div>
+      );
+    case "diferenciales":
+      return c.diferenciales.length === 0 ? <p className="text-sm text-suave">Sin diferenciales: no se muestran.</p> : (
+        <ul className="flex flex-wrap gap-1.5">{c.diferenciales.map((d, i) => <li key={i} className="rounded-full border border-borde px-3 py-1 text-sm font-semibold">{t(d)}</li>)}</ul>
+      );
+    case "propuestas":
+      return c.propuestas.length === 0 ? <p className="text-sm text-suave">Sin propuestas: la sección no aparece.</p> : (
+        <ul className="space-y-3">
+          {c.propuestas.map((p, i) => (
+            <li key={i} className="space-y-1">
+              <p className="w-fit rounded-2xl bg-pizarra px-3 py-1.5 text-sm font-semibold">{t(p.pregunta)}</p>
+              <p className="ml-auto w-fit max-w-[90%] rounded-2xl bg-marca px-3 py-1.5 text-sm text-white">{t(p.respuesta)}{t(p.cuando) ? <strong className="block text-cielo">{t(p.cuando)}</strong> : null}</p>
+            </li>
+          ))}
+        </ul>
+      );
     case "pasos":
       return (
         <ol className="space-y-3">
@@ -122,6 +151,7 @@ function VistaPrevia({ clave, c, idioma }: { clave: ClaveSitio; c: ContenidoSiti
       return (
         <div className="rounded-base bg-marca p-4 text-sm text-white/85">
           <p>{[k.direccion, k.telefono, k.email].filter(Boolean).join(" · ") || "Datos de contacto a confirmar."}</p>
+          {t(k.horario) ? <p className="mt-1">{t(k.horario)}</p> : null}
           <p className="mt-1 font-semibold text-cielo">{[k.whatsapp ? "WhatsApp" : "", ...k.redes.map((r) => r.nombre)].filter(Boolean).join(" · ")}</p>
         </div>
       );
@@ -183,6 +213,35 @@ export function EditorSitio({ inicial, actualizado }: { inicial: ContenidoSitio;
         </div>
       );
       break;
+    case "grupos":
+      formulario = (
+        <Lista items={c.grupos} onChange={(v) => cambiar("grupos", v)} nombre="Tramo" max={6} nuevo={() => ({ tramo: vacio(), grupos: [{ nombre: "", edad: vacio() }] })}
+          render={(tr, set, i) => (<>
+            <CampoBilingue id={`tramo-${i}`} etiqueta="Nombre del tramo" max={40} requerido valor={tr.tramo} onChange={(v) => set({ ...tr, tramo: v })} ayuda="Por ejemplo: Kinder, Kids, Teens, Adultos." />
+            <Lista items={tr.grupos} onChange={(v) => set({ ...tr, grupos: v })} nombre="Grupo" min={1} max={12} nuevo={() => ({ nombre: "", edad: vacio() })}
+              render={(x, setG, j) => (<>
+                <Campo id={`tramo-${i}-grupo-${j}`} etiqueta="Nombre del grupo" maxLength={40} required value={x.nombre} onChange={(e) => setG({ ...x, nombre: e.target.value })} placeholder="Kids 1" />
+                <CampoBilingue id={`tramo-${i}-grupo-${j}-edad`} etiqueta="Edad" max={40} valor={x.edad} onChange={(v) => setG({ ...x, edad: v })} ayuda="Ej.: 8 años. Puede quedar vacío." />
+              </>)} />
+          </>)} />
+      );
+      break;
+    case "diferenciales":
+      formulario = (
+        <Lista items={c.diferenciales} onChange={(v) => cambiar("diferenciales", v)} nombre="Diferencial" max={8} nuevo={vacio}
+          render={(d, set, i) => <CampoBilingue id={`dif-${i}`} etiqueta="Texto" max={60} requerido valor={d} onChange={set} />} />
+      );
+      break;
+    case "propuestas":
+      formulario = (
+        <Lista items={c.propuestas} onChange={(v) => cambiar("propuestas", v)} nombre="Propuesta" max={8} nuevo={() => ({ pregunta: vacio(), respuesta: vacio(), cuando: vacio() })}
+          render={(p, set, i) => (<>
+            <CampoBilingue id={`prop-${i}-pregunta`} etiqueta="Pregunta" max={120} requerido valor={p.pregunta} onChange={(v) => set({ ...p, pregunta: v })} ayuda="Como la haría alguien interesado: «¿Querés practicar solo speaking?»" />
+            <CampoBilingue id={`prop-${i}-respuesta`} etiqueta="Respuesta" max={240} multilinea requerido valor={p.respuesta} onChange={(v) => set({ ...p, respuesta: v })} />
+            <CampoBilingue id={`prop-${i}-cuando`} etiqueta="Días y horarios (opcional)" max={80} valor={p.cuando} onChange={(v) => set({ ...p, cuando: v })} />
+          </>)} />
+      );
+      break;
     case "pasos":
       formulario = (
         <Lista items={c.pasos} onChange={(v) => cambiar("pasos", v)} nombre="Paso" min={1} max={8} nuevo={() => ({ titulo: vacio(), texto: vacio() })}
@@ -212,6 +271,7 @@ export function EditorSitio({ inicial, actualizado }: { inicial: ContenidoSitio;
             <Campo id="contacto-whatsapp" etiqueta="WhatsApp" type="tel" maxLength={40} value={k.whatsapp} onChange={(e) => set({ whatsapp: e.target.value })} ayuda="Con código de país y área, ej.: +54 9 3863 123456." />
             <Campo id="contacto-email" etiqueta="Email" type="email" maxLength={160} value={k.email} onChange={(e) => set({ email: e.target.value })} className="sm:col-span-2" />
           </div>
+          <CampoBilingue id="contacto-horario" etiqueta="Horario de atención" max={120} valor={k.horario} onChange={(v) => set({ horario: v })} ayuda="Ej.: Lunes a viernes de 18 a 22 h." />
           <div>
             <p className="mb-2 text-sm font-semibold">Redes sociales</p>
             <Lista items={k.redes} onChange={(v) => set({ redes: v })} nombre="Red" max={6} nuevo={() => ({ nombre: "", url: "" })}

@@ -14,10 +14,10 @@ const INTRO: Record<PerfilAI, string> = {
 };
 
 const SUGERENCIAS: Record<PerfilAI, string[]> = {
-  visitante: ["¿Qué horarios hay para niños?", "¿Cómo es la nivelación?", "Cursos para adultos", "¿La preinscripción asegura el lugar?"],
+  visitante: ["¿Qué grupo hay para 9 años?", "¿Dónde están?", "¿Qué necesito para inscribirme?", "¿Cuándo es el speaking club?"],
   estudiante: ["Explicame el present perfect", "¿Cómo uso el past simple?", "Vocabulario de la rutina", "¿Cómo practico en casa?"],
   docente: ["Ideas de warm-up", "¿Cómo planifico una clase?", "Rúbrica para speaking", "¿Cómo doy devoluciones?"],
-  familia: ["¿Qué hago si mi hijo falta?", "¿Cómo informo una transferencia?", "¿Qué son las clases abiertas?", "¿Quién ve la info de mi hijo?"],
+  familia: ["¿Qué hago si mi hijo falta?", "¿Cómo informo una transferencia?", "¿Qué necesito para inscribirlo?", "¿Quién ve la info de mi hijo?"],
   gestion: ["¿Cómo registro un cobro?", "¿Cómo leo el tablero?", "Estados de una inscripción", "¿Cómo tomo asistencia?"],
 };
 

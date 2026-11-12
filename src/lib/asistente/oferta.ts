@@ -7,7 +7,7 @@ import type { CursoPublicado } from "@/lib/oferta";
 const DIAS = ["", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
 const MODALIDAD: Record<string, string> = { presencial: "presencial", virtual: "virtual", mixta: "presencial y virtual" };
 
-const SOBRE_OFERTA = /horari|\bhoras?\b|\bd[ií]as\b|curso|edad|\d+\s*años|niñ|hij[oa]|nene|nena|adolesc|adultos?\b|vacante|lugar|cupo|empiez|inicio|inscrib|turno|modalidad|virtual|presencial/i;
+const SOBRE_OFERTA = /horari|\bhoras?\b|\bd[ií]as\b|curso|edad|\d+\s*años|niñ|hij[oa]|nene|nena|adolesc|adultos?\b|vacante|lugar|cupo|empiez|inicio|turno|modalidad|virtual|presencial/i;
 
 function aQuien(pregunta: string, cursos: CursoPublicado[]) {
   const edad = /(\d{1,2})\s*años/i.exec(pregunta)?.[1];

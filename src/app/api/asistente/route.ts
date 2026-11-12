@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { obtenerProveedor } from "@/lib/asistente/proveedor";
+import { respuestaInstitucional } from "@/lib/asistente/institucional";
 import { respuestaSobreOferta } from "@/lib/asistente/oferta";
+import { institucion } from "@/config/institucion";
+import { obtenerContenidoSitio } from "@/lib/sitio";
 import { MAX_PREGUNTA, responder } from "@/lib/asistente/responder";
 import { obtenerOferta } from "@/lib/oferta";
 import type { Fuente } from "@/lib/asistente/tipos";
@@ -28,10 +31,13 @@ export async function POST(request: Request) {
       proveedor: sesion ? obtenerProveedor() : null,
       registrarUso: async () => (sesion ? (await supabase.rpc("registrar_uso_asistente")).data === true : true),
       // A docentes no les respondemos con la oferta: sus preguntas son de enseñanza.
-      oferta: async (q) =>
-        sesion && sesion.perfiles.every((p) => p === "docente" || p === "administracion" || p === "direccion")
-          ? null
-          : respuestaSobreOferta(q, (await obtenerOferta()).cursos),
+      oferta: async (q) => {
+        if (sesion && sesion.perfiles.every((p) => p === "docente" || p === "administracion" || p === "direccion")) return null;
+        // Primero lo que el instituto publica (contacto, grupo por edad); después, horarios.
+        const sitio = await obtenerContenidoSitio();
+        return respuestaInstitucional(q, { contacto: sitio.contacto, grupos: sitio.grupos, localidad: institucion.localidad })
+          ?? respuestaSobreOferta(q, (await obtenerOferta()).cursos);
+      },
       buscar: async (q) => ((await supabase.rpc("buscar_ayuda", { p_consulta: q, p_limite: 4 })).data ?? []) as Fuente[],
     },
   );
