@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Reproductor } from "@/componentes/grabador";
 import { Aviso, Boton, EstadoVacio, Insignia, Tarjeta, Titulo } from "@/componentes/ui";
+import { firmarAudios } from "@/lib/audios";
 import { fechaHora } from "@/lib/formato";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
@@ -26,6 +28,7 @@ interface Entrega {
   id: string; matricula_id: string; estado: string; respuestas: Record<string, unknown>; texto: string | null;
   entregada_en: string | null; puntaje_auto: string | null; nota: string | null; devolucion: string | null;
   reaccion: string | null; publicada: boolean;
+  audio_ruta: string | null; audio_segundos: number | null; devolucion_audio: string | null;
 }
 interface Matricula { id: string; estudiantes: { personas: { nombres: string; apellidos: string } | null } | null }
 
@@ -51,13 +54,14 @@ export default async function ResultadosActividad({ params, searchParams }: {
 
   const [preguntasR, entregasR, matriculasR] = await Promise.all([
     supabase.from("actividad_preguntas").select("id, orden, enunciado, tipo, opciones, actividad_claves(correcta)").eq("actividad_id", id).order("orden"),
-    supabase.from("entregas").select("id, matricula_id, estado, respuestas, texto, entregada_en, puntaje_auto, nota, devolucion, reaccion, publicada")
+    supabase.from("entregas").select("id, matricula_id, estado, respuestas, texto, entregada_en, puntaje_auto, nota, devolucion, reaccion, publicada, audio_ruta, audio_segundos, devolucion_audio")
       .eq("actividad_id", id).order("entregada_en", { ascending: true }),
     supabase.from("matriculas").select("id, estudiantes(personas(nombres, apellidos))").eq("comision_id", a.comision_id).eq("estado", "activa"),
   ]);
   const preguntas = (preguntasR.data ?? []) as unknown as Pregunta[];
   const entregas = ((entregasR.data ?? []) as Entrega[]).filter((e) => e.estado !== "en_curso");
   const matriculas = (matriculasR.data ?? []) as unknown as Matricula[];
+  const audios = await firmarAudios(supabase, entregas.flatMap((e) => [e.audio_ruta, e.devolucion_audio]));
   const fallo = preguntasR.error || entregasR.error || matriculasR.error;
 
   const nombre = new Map(matriculas.map((m) => [m.id, m.estudiantes?.personas ? `${m.estudiantes.personas.nombres} ${m.estudiantes.personas.apellidos}` : "Estudiante"]));
@@ -247,8 +251,17 @@ export default async function ResultadosActividad({ params, searchParams }: {
                             );
                           })}
                         </ol>
+                        {e.audio_ruta && audios.get(e.audio_ruta) ? (
+                          <div className="mt-3 rounded-base bg-cielo-suave p-3">
+                            <p className="mb-2 text-sm font-semibold">
+                              <span aria-hidden>🗣️ </span>Grabación{e.audio_segundos ? ` · ${Math.floor(e.audio_segundos / 60)}:${String(e.audio_segundos % 60).padStart(2, "0")}` : ""}
+                            </p>
+                            <Reproductor src={audios.get(e.audio_ruta)!} etiqueta={`Grabación de ${nombre.get(e.matricula_id) ?? "el estudiante"}`} />
+                          </div>
+                        ) : a.habilidad === "habla" ? <p className="mt-3 text-sm text-suave">Esta entrega no tiene grabación.</p> : null}
                         {e.texto ? <p className="mt-2 whitespace-pre-line rounded-base bg-pizarra p-3 text-sm" lang="en">{e.texto}</p> : null}
-                        <Correccion entrega={e} actividad={a.id} puntajeMax={puntajeMax} sugerida={sugerida} />
+                        <Correccion entrega={e} actividad={a.id} puntajeMax={puntajeMax} sugerida={sugerida}
+                          audioDevolucion={e.devolucion_audio ? audios.get(e.devolucion_audio) ?? null : null} />
                       </details>
                     </li>
                   );

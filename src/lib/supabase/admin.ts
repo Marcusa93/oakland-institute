@@ -4,7 +4,9 @@ import { createClient } from "@supabase/supabase-js";
 /**
  * Cliente con clave secreta: SALTEA RLS. Uso permitido únicamente para
  * (1) invitar cuentas después de verificar el rol de quien lo pide,
- * (2) tareas programadas y (3) notificaciones de la pasarela.
+ * (2) tareas programadas, (3) notificaciones de la pasarela y (4) firmar la
+ * subida de un audio a una ruta que la base ya validó con la sesión del
+ * usuario (ver src/app/panel/audio/acciones.ts).
  * Nunca se importa desde componentes cliente ni se usa para lecturas que
  * dependan del usuario.
  */

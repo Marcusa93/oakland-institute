@@ -15,6 +15,8 @@ export function errorCampus(error: { message?: string } | null | undefined): str
     [/FUERA_DE_PLAZO/, "La actividad está fuera de plazo: ya cerró o todavía no abrió."],
     [/YA_CORREGIDA/, "Tu docente ya corrigió esta entrega: no se puede reemplazar."],
     [/NOTA_FUERA_DE_RANGO/, "La nota está fuera del puntaje de la actividad."],
+    [/FALTA_AUDIO/, "Esta actividad es de speaking: grabá tu respuesta antes de entregar."],
+    [/AUDIO_INVALIDO/, "No encontramos la grabación. Volvé a grabarla y entregá de nuevo."],
     [/SIN_DESTINATARIOS/, "El aviso no tiene destinatarios."],
     [/actividades_check|cierra_en/, "La fecha de cierre tiene que ser posterior a la apertura."],
   ];

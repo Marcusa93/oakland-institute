@@ -2,17 +2,23 @@
 
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { Grabador, Reproductor } from "@/componentes/grabador";
 import { Aviso, Boton } from "@/componentes/ui";
 import { cambiarEstadoActividad, corregirEntrega, publicarCorregidas } from "./acciones";
 import { FRASES_DEVOLUCION, REACCIONES } from "./comun";
 
-export function Correccion({ entrega, actividad, puntajeMax, sugerida }: {
+export function Correccion({ entrega, actividad, puntajeMax, sugerida, audioDevolucion = null }: {
   entrega: { id: string; nota: string | null; devolucion: string | null; reaccion: string | null; publicada: boolean; estado: string };
   actividad: string;
   puntajeMax: number;
   sugerida: number | null;
+  /** Enlace firmado de la devolución hablada ya guardada. */
+  audioDevolucion?: string | null;
 }) {
   const [estado, accion, guardando] = useActionState(corregirEntrega, null);
+  const [audioNuevo, setAudioNuevo] = useState<string | null>(null);
+  const [quitarAudio, setQuitarAudio] = useState(false);
+  const [grabarVoz, setGrabarVoz] = useState(false);
   const [nota, setNota] = useState(entrega.nota !== null ? String(Number(entrega.nota)).replace(".", ",") : "");
   const [devolucion, setDevolucion] = useState(entrega.devolucion ?? "");
   const [reaccion, setReaccion] = useState(entrega.reaccion ?? "");
@@ -23,6 +29,8 @@ export function Correccion({ entrega, actividad, puntajeMax, sugerida }: {
       <input type="hidden" name="entrega" value={id} />
       <input type="hidden" name="actividad" value={actividad} />
       <input type="hidden" name="reaccion" value={reaccion} />
+      <input type="hidden" name="audio" value={audioNuevo ?? ""} />
+      <input type="hidden" name="quitar_audio" value={quitarAudio && !audioNuevo ? "si" : ""} />
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label htmlFor={`nota-${id}`} className="text-sm font-medium">Nota <span className="font-normal text-suave">(de 0 a {puntajeMax.toLocaleString("es-AR")})</span></label>
@@ -60,6 +68,30 @@ export function Correccion({ entrega, actividad, puntajeMax, sugerida }: {
             </button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-medium">Devolución hablada <span className="font-normal text-suave">(opcional)</span></p>
+        {audioDevolucion && !quitarAudio && !grabarVoz ? (
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <Reproductor src={audioDevolucion} etiqueta="Tu devolución hablada" />
+            <button type="button" onClick={() => setGrabarVoz(true)} className="min-h-11 rounded-full border border-borde px-4 text-sm font-semibold text-marca hover:bg-marca-suave">Grabar otra</button>
+            <button type="button" onClick={() => setQuitarAudio(true)} className="min-h-11 rounded-full px-3 text-sm font-semibold text-acento hover:underline">Quitar</button>
+          </div>
+        ) : grabarVoz || !audioDevolucion || quitarAudio ? (
+          grabarVoz ? (
+            <div className="mt-1">
+              <Grabador tipo="devolucion" id={id} maximo={120} onListo={(ruta) => setAudioNuevo(ruta)}
+                textos={{ grabar: "Grabar devolución", ayuda: "Corregile la pronunciación con tu voz. Hasta 2:00." }} />
+            </div>
+          ) : (
+            <button type="button" onClick={() => setGrabarVoz(true)}
+              className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-full border border-dashed border-marca px-4 text-sm font-semibold text-marca hover:bg-marca-suave">
+              🎙️ Grabar una devolución con tu voz
+            </button>
+          )
+        ) : null}
+        {quitarAudio && !audioNuevo ? <p className="mt-1 text-xs text-suave">La devolución hablada se quita al guardar.</p> : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

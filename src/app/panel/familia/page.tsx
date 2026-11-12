@@ -4,6 +4,7 @@ import { fecha, fechaHora, hoyISO } from "@/lib/formato";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { ActividadesYNotas } from "./actividades-y-notas";
+import { ResumenDeLaSemana } from "./resumen-semanal";
 import { ESTADOS_ASISTENCIA, ETIQUETA_ASISTENCIA, TONO_ASISTENCIA, hora, horariosVigentes, textoHorario, type Horario } from "../mis-comisiones/util";
 
 export const metadata: Metadata = { title: "Cursada" };
@@ -25,8 +26,9 @@ interface Observacion { id: string; estudiante_id: string; texto: string; creada
 
 const MODALIDAD: Record<string, string> = { presencial: "Presencial", virtual: "Virtual", mixta: "Mixta" };
 
-export default async function Cursada() {
+export default async function Cursada({ searchParams }: { searchParams: Promise<{ semana?: string }> }) {
   const sesion = await exigirPermiso("inscripciones", "ver");
+  const anterior = (await searchParams).semana === "anterior";
   const supabase = await crearClienteServidor();
   const hoy = hoyISO();
 
@@ -112,6 +114,8 @@ export default async function Cursada() {
                   Cuando administración confirme una inscripción, la vas a ver acá con sus horarios.
                 </EstadoVacio>
               ) : (
+                <>
+                <ResumenDeLaSemana estudianteId={e.id} nombre={e.personas?.nombres ?? "el estudiante"} esPropio={esPropio} anterior={anterior} />
                 <div className="grid gap-4 lg:grid-cols-2">
                   {suyas.map((m) => {
                     const k = m.comisiones!;
@@ -161,6 +165,7 @@ export default async function Cursada() {
                     );
                   })}
                 </div>
+                </>
               )}
 
               {!sinPermiso ? <ActividadesYNotas estudianteId={e.id} nombre={e.personas?.nombres ?? "este estudiante"} esPropio={esPropio} /> : null}

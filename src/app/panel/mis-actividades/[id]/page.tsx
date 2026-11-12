@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Reproductor } from "@/componentes/grabador";
 import { Aviso, EstadoVacio, Insignia, Titulo } from "@/componentes/ui";
+import { firmarAudios } from "@/lib/audios";
 import { fechaHora } from "@/lib/formato";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
@@ -40,6 +42,16 @@ export default async function ResolverActividad({ params }: { params: Promise<{ 
   const s = situacion(mia, referencia);
   const v = vencimiento(a.cierra_en, referencia);
   const abierta = a.estado === "publicada" && !v.vencida && new Date(a.abre_en).getTime() <= referencia;
+  const habla = a.habilidad === "habla";
+  const audios = await firmarAudios(supabase, [mia.audio_ruta, mia.devolucion_audio]);
+  const miAudio = mia.audio_ruta ? audios.get(mia.audio_ruta) : undefined;
+  const audioDocente = mia.devolucion_audio ? audios.get(mia.devolucion_audio) : undefined;
+  const grabacion = miAudio ? (
+    <div className="mt-4">
+      <p className="mb-1 text-sm font-semibold">Tu grabación{mia.audio_segundos ? ` · ${Math.floor(mia.audio_segundos / 60)}:${String(mia.audio_segundos % 60).padStart(2, "0")}` : ""}</p>
+      <Reproductor src={miAudio} etiqueta="Tu grabación" />
+    </div>
+  ) : null;
   const preguntas = ((preguntasR.data ?? []) as PreguntaResolver[]).map((p) => ({ ...p, opciones: Array.isArray(p.opciones) ? p.opciones : [] }));
 
   return (
@@ -66,27 +78,35 @@ export default async function ResolverActividad({ params }: { params: Promise<{ 
         <section aria-labelledby="t-res" className="rounded-base border border-borde bg-superficie p-5">
           <h2 id="t-res" className="text-lg font-bold">Tu resultado</h2>
           <ResultadoPublicado nota={mia.nota} puntajeMax={mia.puntaje_max} reaccion={mia.reaccion} devolucion={mia.devolucion} />
-          <p className="text-xs text-suave">Entregada {fechaHora(mia.entregada_en)}.</p>
+          {audioDocente ? (
+            <div className="globo globo-izq mb-6 mt-2 bg-cielo-suave px-5 py-4">
+              <p className="mb-2 text-sm font-semibold text-marca-fuerte"><span aria-hidden>🗣️ </span>Tu docente te dejó una devolución hablada</p>
+              <Reproductor src={audioDocente} etiqueta="Devolución hablada de tu docente" />
+            </div>
+          ) : null}
+          {grabacion}
+          <p className="text-xs text-suave">Entregada el {fechaHora(mia.entregada_en)}</p>
         </section>
       ) : s === "entregada" ? (
         <>
           <Aviso tono="exito">
-            Entregaste el {fechaHora(mia.entregada_en)}. Tu docente la está corrigiendo.
+            Entregada el {fechaHora(mia.entregada_en)}: tu docente la está corrigiendo.
             {abierta ? " Si querés cambiar algo, podés volver a entregar hasta el cierre." : ""}
           </Aviso>
+          {grabacion}
           {abierta ? (
             <details className="mt-4">
               <summary className="min-h-11 cursor-pointer py-2 font-semibold text-marca">Volver a entregar</summary>
-              <p className="mb-3 text-sm text-suave">Por ahora tus respuestas anteriores no se recuperan: completalas de nuevo.</p>
-              <Resolver actividad={a.id} preguntas={preguntas} acreditante={a.evaluacion === "acreditante"} reentrega />
+              {preguntas.length ? <p className="mb-3 text-sm text-suave">Por ahora tus respuestas anteriores no se recuperan: completalas de nuevo.</p> : null}
+              <Resolver actividad={a.id} preguntas={preguntas} acreditante={a.evaluacion === "acreditante"} reentrega habla={habla} conAudioPrevio={!!mia.audio_ruta} />
             </details>
           ) : null}
         </>
       ) : abierta ? (
-        <Resolver actividad={a.id} preguntas={preguntas} acreditante={a.evaluacion === "acreditante"} reentrega={false} />
+        <Resolver actividad={a.id} preguntas={preguntas} acreditante={a.evaluacion === "acreditante"} reentrega={false} habla={habla} />
       ) : (
         <EstadoVacio titulo={a.estado === "publicada" && !v.vencida ? "Todavía no abrió" : "La actividad está cerrada"}>
-          {a.estado === "publicada" && !v.vencida ? `Abre el ${fechaHora(a.abre_en)}.` : "Ya no se puede entregar. Si necesitás una prórroga, hablalo con tu docente."}
+          {a.estado === "publicada" && !v.vencida ? `Abre el ${fechaHora(a.abre_en)}` : "Ya no se puede entregar. Si necesitás una prórroga, hablalo con tu docente."}
         </EstadoVacio>
       )}
     </>

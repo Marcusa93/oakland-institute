@@ -176,4 +176,20 @@ if (!yaHilo.length) {
   }));
   console.log("✓ mensajes y evaluación demo");
 }
+// --- Speaking: actividades con grabación (idempotente aparte) ------------------
+const SPEAKING = [
+  { comision: ADULTOS, titulo: "Speaking: tell us about your weekend",
+    consigna: "Grabá un audio de 1 minuto contando qué hiciste el fin de semana. Usá al menos tres verbos en pasado (went, ate, visited…)." },
+  { comision: NINOS, titulo: "Speaking: my favourite animal",
+    consigna: "Grabá un audio corto: What is your favourite animal? Why do you like it? Contalo en 3 frases." },
+];
+for (const a of SPEAKING) {
+  const existe = await q(db.from("actividades").select("id").eq("titulo", a.titulo));
+  if (existe.length) continue;
+  await q(db.from("actividades").insert({
+    comision_id: a.comision, autor_cuenta_id: docenteCuenta, titulo: a.titulo, consigna: a.consigna, habilidad: "habla",
+    evaluacion: "formativa", estado: "publicada", abre_en: dias(-1), cierra_en: dias(6),
+  }));
+  console.log(`✓ ${a.titulo}`);
+}
 console.log("\nListo.");

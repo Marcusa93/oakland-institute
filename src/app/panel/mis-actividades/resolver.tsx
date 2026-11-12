@@ -2,16 +2,22 @@
 
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
+import { Grabador } from "@/componentes/grabador";
 import { Aviso, Boton } from "@/componentes/ui";
 import { entregarActividad, type ResultadoEntrega } from "./acciones";
 
 export interface PreguntaResolver { id: string; orden: number; enunciado: string; tipo: "opcion" | "texto"; opciones: string[] }
 
-export function Resolver({ actividad, preguntas, acreditante, reentrega }: {
+export function Resolver({ actividad, preguntas, acreditante, reentrega, habla = false, conAudioPrevio = false }: {
   actividad: string; preguntas: PreguntaResolver[]; acreditante: boolean; reentrega: boolean;
+  /** Actividad de speaking: se entrega una grabación. */
+  habla?: boolean;
+  /** Ya hay una grabación entregada: reentregar sin grabar de nuevo la conserva. */
+  conAudioPrevio?: boolean;
 }) {
   const [respuestas, setRespuestas] = useState<Record<string, number | string>>({});
   const [texto, setTexto] = useState("");
+  const [audio, setAudio] = useState<{ ruta: string; segundos: number } | null>(null);
   const [resultado, setResultado] = useState<ResultadoEntrega | null>(null);
   const [enviando, iniciar] = useTransition();
 
@@ -20,13 +26,16 @@ export function Resolver({ actividad, preguntas, acreditante, reentrega }: {
     return typeof r === "number" || (typeof r === "string" && r.trim() !== "");
   }).length;
   const total = preguntas.length;
-  const pct = total ? Math.round((100 * respondidas) / total) : texto.trim() ? 100 : 0;
+  const pct = habla
+    ? Math.round((100 * ((audio || conAudioPrevio ? 1 : 0) + respondidas)) / (total + 1))
+    : total ? Math.round((100 * respondidas) / total) : texto.trim() ? 100 : 0;
 
   function entregar(e: React.FormEvent) {
     e.preventDefault();
     if (total && respondidas < total && !window.confirm(`Te faltan ${total - respondidas} ${total - respondidas === 1 ? "pregunta" : "preguntas"}. ¿Entregás igual?`)) return;
-    if (!total && !texto.trim()) { setResultado({ ok: false, mensaje: "Escribí tu respuesta antes de entregar." }); return; }
-    iniciar(async () => setResultado(await entregarActividad({ actividad, respuestas, texto })));
+    if (habla && !audio && !conAudioPrevio) { setResultado({ ok: false, mensaje: "Grabá tu respuesta antes de entregar." }); return; }
+    if (!habla && !total && !texto.trim()) { setResultado({ ok: false, mensaje: "Escribí tu respuesta antes de entregar." }); return; }
+    iniciar(async () => setResultado(await entregarActividad({ actividad, respuestas, texto, audio: audio?.ruta ?? null, segundos: audio?.segundos ?? null })));
   }
 
   if (resultado?.ok) return <Festejo resultado={resultado} acreditante={acreditante} />;
@@ -35,14 +44,28 @@ export function Resolver({ actividad, preguntas, acreditante, reentrega }: {
     <form onSubmit={entregar} className="space-y-4">
       <div className="sticky top-0 z-10 -mx-4 border-b border-borde bg-fondo/95 px-4 py-2 backdrop-blur sm:mx-0">
         <div className="flex justify-between text-xs font-semibold text-suave" aria-live="polite">
-          <span>{total ? `${respondidas} de ${total} respondidas` : "Respuesta libre"}</span><span>{pct} %</span>
+          <span>{habla ? (audio || conAudioPrevio ? "Grabación lista" : "Falta tu grabación") : total ? `${respondidas} de ${total} respondidas` : "Respuesta libre"}</span><span>{pct} %</span>
         </div>
         <div className="mt-1 h-2 overflow-hidden rounded-full bg-pizarra" aria-hidden>
           <div className="h-full rounded-full bg-acento transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${pct}%` }} />
         </div>
       </div>
 
-      {total === 0 ? (
+      {habla ? (
+        <section aria-labelledby="t-grabar" className="space-y-3">
+          <h2 id="t-grabar" className="text-lg font-bold">Tu respuesta hablada</h2>
+          <Grabador tipo="entrega" id={actividad} maximo={180}
+            onListo={(ruta, segundos) => setAudio(ruta && segundos ? { ruta, segundos } : null)}
+            textos={conAudioPrevio ? { ayuda: "Ya entregaste una grabación. Si grabás otra, reemplaza a la anterior." } : undefined} />
+          <div>
+            <label htmlFor="nota-docente" className="text-sm font-semibold">Algo para tu docente <span className="font-normal text-suave">(opcional)</span></label>
+            <textarea id="nota-docente" rows={2} maxLength={1000} value={texto} onChange={(e) => setTexto(e.target.value)}
+              className="mt-1 block w-full rounded-base border border-borde bg-superficie px-3 py-2" placeholder="Por ejemplo: me trabé en la segunda parte." />
+          </div>
+        </section>
+      ) : null}
+
+      {total === 0 && !habla ? (
         <div className="rounded-base border border-borde bg-superficie p-4">
           <label htmlFor="texto-libre" className="font-semibold">Tu respuesta</label>
           <textarea id="texto-libre" rows={10} maxLength={8000} lang="en" value={texto} onChange={(e) => setTexto(e.target.value)}

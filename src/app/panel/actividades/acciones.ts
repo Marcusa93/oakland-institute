@@ -130,6 +130,8 @@ const esquemaCorreccion = z.object({
   devolucion: z.string().trim().max(2000),
   reaccion: z.union([z.literal(""), z.enum(["excelente", "muy_bien", "bien", "a_mejorar"])]),
   publicar: z.boolean(),
+  audio: z.union([z.literal(""), z.string().max(300).regex(/^devoluciones\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.[a-z0-9]{2,4}$/)]),
+  quitarAudio: z.boolean(),
 });
 
 export async function corregirEntrega(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
@@ -138,16 +140,18 @@ export async function corregirEntrega(_previo: Resultado | null, formData: FormD
   const r = esquemaCorreccion.safeParse({
     entrega: t("entrega"), actividad: t("actividad"), nota: t("nota").trim(), devolucion: String(formData.get("devolucion") ?? ""),
     reaccion: t("reaccion"), publicar: formData.get("publicar") === "si",
+    audio: String(formData.get("audio") ?? ""), quitarAudio: formData.get("quitar_audio") === "si",
   });
   if (!r.success) return { ok: false, mensaje: "Revisá la nota: tiene que ser un número (por ejemplo 7 o 7,5)." };
   const d = r.data;
-  if (d.publicar && d.nota === "" && !d.reaccion && !d.devolucion) {
-    return { ok: false, mensaje: "Para publicar, poné una nota, una reacción o una devolución." };
+  if (d.publicar && d.nota === "" && !d.reaccion && !d.devolucion && !d.audio) {
+    return { ok: false, mensaje: "Para publicar, poné una nota, una reacción o una devolución (escrita o hablada)." };
   }
   const supabase = await crearClienteServidor();
   const { error } = await supabase.rpc("corregir_entrega", {
     p_entrega: d.entrega, p_nota: d.nota === "" ? null : d.nota, p_devolucion: d.devolucion || null,
     p_reaccion: d.reaccion || null, p_publicar: d.publicar,
+    p_audio: d.audio || null, p_quitar_audio: d.quitarAudio,
   });
   if (error) return { ok: false, mensaje: errorCampus(error) };
   revalidatePath(`/panel/actividades/${d.actividad}`);
