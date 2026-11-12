@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useIdioma, type Idioma } from "./idioma";
 import { Letras, useMovimientoReducido, useTraduccion } from "./traduccion";
 
@@ -10,7 +10,8 @@ const FRASES = {
 } as const;
 
 function Linea({ texto }: { texto: string }) {
-  return <span className="block whitespace-nowrap"><Letras letras={useTraduccion(texto, true)} /></span>;
+  // Sin mezcla al cargar: el primer render (y lo que lee un buscador) es el texto real.
+  return <span className="block whitespace-nowrap"><Letras letras={useTraduccion(texto)} /></span>;
 }
 
 /**
@@ -18,13 +19,14 @@ function Linea({ texto }: { texto: string }) {
  * un idioma; desde ahí sigue al idioma de la página. Se pausa al apuntarlo.
  * Tocarlo o hacerle clic lo pasa al otro idioma por unos segundos.
  */
-export function TituloBilingue() {
+export function TituloBilingue({ children }: { children?: ReactNode }) {
   const { idioma, elegido, cambiar } = useIdioma();
   const [alterno, setAlterno] = useState<Idioma>("es");
   const [pausa, setPausa] = useState(false);
   const reducido = useMovimientoReducido();
   const [forzado, setForzado] = useState<Idioma | null>(null);
   const volver = useRef<number | undefined>(undefined);
+  const primera = useRef(true);
   const base: Idioma = elegido ? idioma : alterno;
   const mostrado: Idioma = forzado ?? base;
 
@@ -37,8 +39,15 @@ export function TituloBilingue() {
 
   useEffect(() => {
     if (elegido || pausa || reducido || forzado) return;
-    const t = window.setInterval(() => setAlterno((i) => (i === "es" ? "en" : "es")), 5500);
-    return () => window.clearInterval(t);
+    const pasar = () => setAlterno((i) => (i === "es" ? "en" : "es"));
+    let intervalo: number | undefined;
+    // La primera traducción llega enseguida, para que se entienda el juego.
+    const espera = window.setTimeout(() => {
+      primera.current = false;
+      pasar();
+      intervalo = window.setInterval(pasar, 5500);
+    }, primera.current ? 2200 : 5500);
+    return () => { window.clearTimeout(espera); window.clearInterval(intervalo); };
   }, [elegido, pausa, reducido, forzado]);
 
   return (
@@ -56,7 +65,8 @@ export function TituloBilingue() {
           </span>
         </button>
       </h1>
-      <div className="mt-6 inline-flex rounded-full bg-white/10 p-1 text-sm font-semibold" role="group" aria-label="Idioma de la página">
+      <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-3">
+      <div className="inline-flex shrink-0 rounded-full bg-white/10 p-1 text-sm font-semibold" role="group" aria-label="Idioma de la página">
         {(["es", "en"] as const).map((i) => (
           <button
             key={i}
@@ -68,6 +78,8 @@ export function TituloBilingue() {
             {i === "es" ? "Castellano" : "English"}
           </button>
         ))}
+      </div>
+      {children ? <div className="max-w-xs text-sm leading-snug text-white/70">{children}</div> : null}
       </div>
     </div>
   );

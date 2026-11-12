@@ -35,6 +35,14 @@ export default async function Landing() {
   // Textos editables desde el panel (Sitio web); si no hay nada cargado, los de siempre.
   const { portada, pasos: PASOS, preguntas: PREGUNTAS, contacto: c, anuncio, certificaciones } = sitio;
   const whatsapp = enlaceWhatsapp(c.whatsapp);
+  const pista = (
+    <>
+      <span className="hidden [@media(hover:hover)]:inline"><T es="Pasá el cursor sobre un título o un botón para verlo en inglés."
+        en="Hover over a heading or button to see it in Spanish." /></span>
+      <span className="[@media(hover:hover)]:hidden"><T es="Tocá un título para verlo en inglés, o mantené apretado un botón."
+        en="Tap a heading to see it in Spanish, or press and hold a button." /></span>
+    </>
+  );
 
   return (
     <IdiomaProvider>
@@ -76,32 +84,33 @@ export default async function Landing() {
 
       <main id="contenido">
         {/* Portada: el título que se traduce solo es el momento de la página. */}
-        <section className="relative overflow-hidden bg-marca">
-          <div aria-hidden className="absolute -right-24 -top-24 size-[28rem] rounded-full bg-marca-fuerte" />
-          <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-14 sm:pt-20 lg:grid-cols-[1.25fr_1fr] lg:items-center">
+        <section className="renglones relative overflow-hidden bg-marca [--renglon:3.25rem] lg:[--renglon:4rem]">
+          {/* El margen rojo de la hoja: justo a la izquierda del contenido. */}
+          <div aria-hidden className="margen-cuaderno hidden opacity-80 sm:block" style={{ left: "max(1.25rem, calc(50% - 36rem - 1rem))" }} />
+          <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-14 sm:px-12 sm:pt-20 lg:grid-cols-[1.2fr_1fr] lg:items-center xl:px-4">
             <div>
-              <p className="mb-6 text-lg font-semibold text-cielo"><T es={`Inglés en ${institucion.localidad}`} en={`English in ${institucion.localidad}`} /></p>
+              <p className="mb-6 inline-flex items-center gap-2 text-lg font-semibold text-cielo">
+                <span aria-hidden className="h-0.5 w-8 rounded-full bg-acento" />
+                <T es={`Inglés en ${institucion.localidad}`} en={`English in ${institucion.localidad}`} />
+              </p>
               {portada.titulo.es ? (
-                <h1 className="font-extrabold leading-[0.95] tracking-[-0.04em] text-white [font-size:clamp(2.75rem,10vw,6.5rem)] [font-variation-settings:'opsz'_96,'wdth'_82]">
-                  <T es={portada.titulo.es} en={enIngles(portada.titulo)} />
-                </h1>
+                <>
+                  <h1 className="font-extrabold leading-[0.95] tracking-[-0.04em] text-white [font-size:clamp(2.75rem,10vw,6.5rem)] [font-variation-settings:'opsz'_96,'wdth'_82]">
+                    <T es={portada.titulo.es} en={enIngles(portada.titulo)} />
+                  </h1>
+                  <p className="mt-6 max-w-sm text-sm text-white/70">{pista}</p>
+                </>
               ) : (
-                <TituloBilingue />
+                <TituloBilingue>{pista}</TituloBilingue>
               )}
               <p data-traducir className="mt-8 max-w-md text-xl text-white/85">
                 <T es={portada.subtitulo.es} en={enIngles(portada.subtitulo)} />
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <a href="#cursos" className="inline-flex min-h-12 items-center rounded-full bg-acento px-6 text-lg font-bold text-white hover:bg-[#a90d26]"><T es="Buscar mi curso" en="Find my course" /></a>
-                <a href="#test" className="inline-flex min-h-12 items-center rounded-full bg-white/10 px-6 text-lg font-semibold text-white hover:bg-white/20"><T es="Probar mi nivel" en="Test my level" /></a>
-                <BotonOaklandAI className="inline-flex min-h-12 items-center rounded-full border border-white/40 px-6 text-lg font-semibold text-white hover:bg-white/10" />
+                <a href="#cursos" className="inline-flex min-h-13 items-center rounded-full bg-acento px-7 text-lg font-bold text-white shadow-[0_10px_30px_-10px_rgb(200_16_46/0.8)] transition-transform hover:-translate-y-0.5 hover:bg-[#a90d26] motion-reduce:transition-none"><T es="Buscar mi curso" en="Find my course" /></a>
+                <a href="#test" className="inline-flex min-h-13 items-center rounded-full border-2 border-white/30 px-7 text-lg font-semibold text-white transition-colors hover:border-white hover:bg-white/10"><T es="Probar mi nivel" en="Test my level" /></a>
               </div>
-              <p className="mt-6 max-w-sm text-sm text-white/70">
-                <span className="hidden [@media(hover:hover)]:inline"><T es="Pasá el cursor sobre un título o un botón para ver su traducción, o cambiá toda la página con ES / EN."
-                  en="Hover over a heading or button to see it in Spanish, or switch the whole page with ES / EN." /></span>
-                <span className="[@media(hover:hover)]:hidden"><T es="Tocá un título para verlo en inglés, o mantené apretado un botón. También podés cambiar toda la página con ES / EN."
-                  en="Tap a heading to see it in Spanish, or press and hold a button. You can also switch the whole page with ES / EN." /></span>
-              </p>
+              <BotonOaklandAI conIcono className="mt-5 inline-flex min-h-11 items-center gap-2.5 rounded-full py-1 pr-3 text-base font-semibold text-white/85 underline-offset-4 hover:text-white hover:underline" />
             </div>
 
             <ConversacionPortada />
@@ -174,11 +183,12 @@ export default async function Landing() {
         ) : null}
 
         <section id="consulta" aria-labelledby="titulo-consulta" className="scroll-mt-20 px-4 pb-20">
-          <div className="mx-auto grid max-w-6xl gap-10 rounded-[2.5rem] bg-white p-6 sm:p-10 lg:grid-cols-[1fr_1.4fr]">
-            <div>
+          <div className="renglones relative mx-auto grid max-w-6xl gap-10 overflow-hidden rounded-[2.5rem] bg-white py-8 pl-10 pr-6 shadow-[0_30px_80px_-40px_rgb(19_29_79/0.35)] [--linea:#e9eef8] sm:[--linea:#e3eaf7] [--renglon:2.25rem] sm:py-12 sm:pl-20 sm:pr-10 lg:grid-cols-[1fr_1.4fr]">
+            <div aria-hidden className="margen-cuaderno left-6 opacity-60 sm:left-12" />
+            <div className="relative">
               <h2 id="titulo-consulta" className="text-4xl font-extrabold tracking-tight text-marca-fuerte sm:text-5xl [font-variation-settings:'opsz'_72]"><T es="Escribinos" en="Write to us" /></h2>
               <p data-traducir className="mt-4 text-lg text-suave"><T es="Te respondemos por el medio que prefieras. Pedimos solo lo necesario para contactarte." en="We'll reply however you prefer. We only ask for what we need to reach you." /></p>
-              {PREGUNTAS.length > 0 ? <div className="mt-10 divide-y divide-borde border-y border-borde">
+              {PREGUNTAS.length > 0 ? <div className="mt-10">
                 {PREGUNTAS.map(({ pregunta: p, respuesta: r }, i) => (
                   <details key={`${i}-${p.es}`} className="group py-1">
                     <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 font-semibold">
@@ -190,7 +200,7 @@ export default async function Landing() {
                 ))}
               </div> : null}
             </div>
-            <FormularioConsulta cursos={cursos.map((x) => ({ id: x.id, nombre: x.nombre })).filter((x) => !x.id.startsWith("demo-"))} textoPrivacidad={privacidad} />
+            <div className="relative"><FormularioConsulta cursos={cursos.map((x) => ({ id: x.id, nombre: x.nombre })).filter((x) => !x.id.startsWith("demo-"))} textoPrivacidad={privacidad} /></div>
           </div>
         </section>
       </main>

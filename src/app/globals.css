@@ -114,6 +114,27 @@ body {
 }
 .globo-izq::after { left: 2.25rem; }
 .globo-der::after { right: 2.25rem; transform: scaleX(-1); }
+
+/* Hoja de cuaderno: renglones y margen rojo, el papel de todo alumno. */
+.renglones {
+  --renglon: 3rem;
+  --linea: rgb(255 255 255 / 0.07);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--renglon) - 1px),
+    var(--linea) calc(var(--renglon) - 1px),
+    var(--linea) var(--renglon)
+  );
+}
+.margen-cuaderno {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--acento);
+  pointer-events: none;
+}
 }
 
 /* Letras del título mientras se "traducen". */
