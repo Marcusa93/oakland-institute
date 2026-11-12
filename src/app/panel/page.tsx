@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- filas sin tipar hasta generar los tipos de la base (backlog 1.18) */
 import Link from "next/link";
 import { Aviso, Boton, EstadoVacio, Insignia, Tarjeta, Titulo } from "@/componentes/ui";
-import { fechaHora, pesos } from "@/lib/formato";
+import { fechaHora, hoyISO, pesos } from "@/lib/formato";
 import { esGestion } from "@/lib/permisos";
 import { exigirSesion } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
@@ -37,18 +37,22 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     (await filtro(supabase.from(tabla).select("*", { count: "exact", head: true }))).count ?? 0;
 
   // Cada consulta devuelve solo lo que la base le permite ver a esta cuenta.
-  const [invitaciones, avisos, consultasNuevas, pagosPorValidar, vinculosPorVerificar, misComisiones, saldos] = await Promise.all([
+  const [invitaciones, avisos, consultasNuevas, pagosPorValidar, vinculosPorVerificar, misComisiones, saldos, deudas] = await Promise.all([
     supabase.from("vinculos_responsables").select("id, parentesco, estudiantes(personas(nombres, apellidos))")
       .eq("responsable_persona_id", sesion.personaId).eq("estado", "invitado"),
     supabase.from("comunicacion_envios").select("id, leido_en, comunicaciones(asunto, cuerpo, enviada_en, categoria)")
       .eq("destinatario_persona_id", sesion.personaId).eq("canal", "interno").order("enviado_en", { ascending: false }).limit(5),
-    gestion ? contar("consultas", (q) => q.eq("estado", "nueva")) : 0,
+    // Consultas para hoy: sin responder, o con la próxima acción vencida o sin agendar.
+    gestion ? contar("consultas", (q) => q.in("estado", ["nueva", "contactada", "nivelacion", "solicitud"])
+      .or(`estado.eq.nueva,proxima_accion_en.is.null,proxima_accion_en.lte."${hoyISO()}T23:59:59-03:00"`)) : 0,
     gestion ? contar("pagos", (q) => q.eq("estado", "informado")) : 0,
     gestion ? contar("vinculos_responsables", (q) => q.eq("estado", "aceptado")) : 0,
     p.includes("docente") ? contar("comision_docentes", (q) => q.eq("docente_persona_id", sesion.personaId).is("hasta", null)) : 0,
     familia ? supabase.from("obligaciones_saldo").select("saldo, vencimiento").in("estado", ["pendiente", "parcial"]) : null,
+    gestion ? supabase.from("obligaciones_saldo").select("responsable_pago_persona_id").in("estado", ["pendiente", "parcial"]).gt("saldo", 0).lt("vencimiento", hoyISO()).limit(2000) : null,
   ]);
   const pendiente = (saldos?.data ?? []).reduce((t, o) => t + Number(o.saldo), 0);
+  const familiasConDeuda = new Set((deudas?.data ?? []).map((o) => o.responsable_pago_persona_id)).size;
 
   // Campus: lo que cada rol tiene que mirar primero.
   const esEstudiante = p.includes("estudiante");
@@ -120,7 +124,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
         {p.includes("docente") ? <Acceso href="/panel/mis-comisiones" titulo="Asistencia" dato={misComisiones} detalle="Tus comisiones: abrí la clase de hoy y tomá asistencia." /> : null}
         {familia ? <Acceso href="/panel/familia" titulo="Cursada" detalle="Horarios, asistencia y avisos." /> : null}
         {familia ? <Acceso href="/panel/cuenta" titulo="Saldo pendiente" dato={pesos(pendiente)} detalle="Ver detalle o informar una transferencia." /> : null}
-        {gestion ? <Acceso href="/panel/consultas" titulo="Consultas nuevas" dato={consultasNuevas} detalle="Sin responder todavía." /> : null}
+        {gestion ? <Acceso href="/panel/consultas" titulo="Consultas para hoy" dato={consultasNuevas} detalle="Sin responder, o con la próxima acción vencida." /> : null}
+        {gestion ? <Acceso href="/panel/cobros/recordatorios" titulo="Cuotas vencidas" dato={familiasConDeuda} detalle="Familias para recordar por WhatsApp o en la app." /> : null}
         {gestion ? <Acceso href="/panel/cobros" titulo="Pagos por validar" dato={pagosPorValidar} detalle="Transferencias informadas sin acreditar." /> : null}
         {gestion ? <Acceso href="/panel/estudiantes" titulo="Vínculos por verificar" dato={vinculosPorVerificar} detalle="Responsables que aceptaron la invitación." /> : null}
         {p.includes("direccion") ? <Acceso href="/panel/tablero" titulo="Tablero" detalle="Caja, saldos, ocupación y conversión." /> : null}

@@ -49,6 +49,14 @@ export default async function Cobros({ searchParams }: { searchParams: Promise<{
         Cobros
       </Titulo>
 
+      <Link href="/panel/cobros/recordatorios" className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-borde bg-superficie p-5 hover:border-marca">
+        <span>
+          <span className="block font-bold">🔔 Recordatorios de cuotas</span>
+          <span className="text-sm text-suave">Familias con cuotas vencidas o por vencer: recordales por WhatsApp o con un aviso en la app.</span>
+        </span>
+        <span className="font-semibold text-marca">Abrir</span>
+      </Link>
+
       <section aria-labelledby="t-validar" className="mb-8">
         <h2 id="t-validar" className={h2}>Pagos por validar</h2>
         <p className="mb-3 max-w-2xl text-sm text-suave">

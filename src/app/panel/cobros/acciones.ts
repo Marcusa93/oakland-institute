@@ -198,3 +198,45 @@ export async function anularObligacion(_previo: Resultado | null, formData: Form
   if (error) return { ok: false, mensaje: mensaje(error) };
   return listo("Obligación anulada. Queda registrada con su motivo.");
 }
+
+// ---------------------------------------------------------------------------
+// Recordatorios de cuotas
+// ---------------------------------------------------------------------------
+const RUTAS_RECORDATORIO = ["/panel/cobros/recordatorios", "/panel"];
+const DIAS_AVISO = 5;
+
+function mensajeRecordatorio(error: { message?: string }): string {
+  if (/SIN_DEUDA/.test(error.message ?? "")) return "Esta persona ya no tiene nada vencido ni por vencer. Actualizá la página.";
+  if (/DESTINATARIO_NO_ECONOMICO/.test(error.message ?? "")) return "Esta persona no figura como responsable de pago: el aviso en la app no le llega.";
+  return mensaje(error);
+}
+
+/** Al tocar WhatsApp: el mensaje lo manda la secretaria; acá queda registrado. */
+export async function registrarRecordatorioWhatsapp(persona: string): Promise<void> {
+  await exigirPermiso("cuenta_corriente", "aprobar");
+  if (!uuid.safeParse(persona).success) return;
+  const supabase = await crearClienteServidor();
+  await supabase.rpc("recordar_deuda", { p_persona: persona, p_canal: "whatsapp", p_dias: DIAS_AVISO });
+  for (const r of RUTAS_RECORDATORIO) revalidatePath(r);
+}
+
+export async function recordarEnApp(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
+  await exigirPermiso("cuenta_corriente", "aprobar");
+  const persona = uuid.safeParse(texto(formData, "persona"));
+  if (!persona.success) return { ok: false, mensaje: "Revisá los datos e intentá de nuevo." };
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase.rpc("recordar_deuda", { p_persona: persona.data, p_canal: "interno", p_dias: DIAS_AVISO });
+  if (error) return { ok: false, mensaje: mensajeRecordatorio(error) };
+  for (const r of RUTAS_RECORDATORIO) revalidatePath(r);
+  return { ok: true, mensaje: "Aviso enviado: lo ve al entrar a la app, en el inicio y en «Avisos»." };
+}
+
+export async function recordarTodasLasVencidas(): Promise<Resultado> {
+  await exigirPermiso("cuenta_corriente", "aprobar");
+  const supabase = await crearClienteServidor();
+  const { data, error } = await supabase.rpc("recordar_vencidas", { p_dias_pausa: 7 });
+  if (error) return { ok: false, mensaje: mensajeRecordatorio(error) };
+  for (const r of RUTAS_RECORDATORIO) revalidatePath(r);
+  const n = Number(data ?? 0);
+  return { ok: true, mensaje: n === 0 ? "No había nadie para avisar: a todos se les recordó en la última semana." : `Listo: ${n} ${n === 1 ? "familia recibió" : "familias recibieron"} el aviso en la app.` };
+}
