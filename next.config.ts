@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Service worker: siempre la última versión (si no, los teléfonos se quedan con la vieja).
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+      {
         source: "/panel/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },

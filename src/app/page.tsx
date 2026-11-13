@@ -15,6 +15,7 @@ import { TestNivel } from "./landing/test-nivel";
 import { TituloBilingue } from "./landing/titulo-bilingue";
 import { IdiomaProvider, SelectorIdioma } from "./landing/idioma";
 import { Traducible as T } from "./landing/traduccion";
+import { BotonInstalar } from "@/componentes/instalar-app";
 
 // La oferta se administra desde el panel: se lee en cada visita, no al compilar.
 export const dynamic = "force-dynamic";
@@ -88,6 +89,7 @@ export default async function Landing() {
               <a href="#consulta" className="latido hidden min-h-10 items-center whitespace-nowrap rounded-full bg-acento px-4 text-white lg:inline-flex"><T es="Hacé tu consulta" en="Ask us" /></a>
             )}
             <SelectorIdioma />
+            <BotonInstalar />
             <Link href="/ingresar" className="inline-flex min-h-11 items-center rounded-full border border-borde bg-white px-3 hover:border-marca sm:px-4"><T es="Ingresar" en="Log in" /></Link>
           </nav>
         </div>

@@ -1,12 +1,38 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "instituto", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev", "--port", "3210"], "port": 3210 },
+    {
+      "name": "instituto",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev",
+        "--port",
+        "3210"
+      ],
+      "port": 3210
+    },
     {
       "name": "instituto-demo",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["NEXT_PUBLIC_SUPABASE_URL=", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=", "pnpm", "dev", "--port", "3211"],
+      "runtimeArgs": [
+        "NEXT_PUBLIC_SUPABASE_URL=",
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=",
+        "pnpm",
+        "dev",
+        "--port",
+        "3211"
+      ],
       "port": 3211
+    },
+    {
+      "name": "instituto-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "start",
+        "--port",
+        "3212"
+      ],
+      "port": 3212
     }
   ]
 }
