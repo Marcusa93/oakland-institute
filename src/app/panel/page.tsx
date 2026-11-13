@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- filas sin tipar hasta generar los tipos de la base (backlog 1.18) */
 import Link from "next/link";
 import { AvisoInstalar } from "@/componentes/instalar-app";
+import { AvisoNotificaciones } from "@/componentes/notificaciones";
 import { Aviso, Boton, EstadoVacio, Insignia, Tarjeta, Titulo } from "@/componentes/ui";
 import { fechaHora, hoyISO, pesos } from "@/lib/formato";
 import { esGestion } from "@/lib/permisos";
@@ -74,6 +75,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
   return (
     <>
       <Titulo descripcion="Lo que tenés para hacer hoy.">Inicio</Titulo>
+      <AvisoNotificaciones />
       <AvisoInstalar />
       {aviso === "sin-permiso" ? <div className="mb-4"><Aviso tono="alerta">Esa sección no está disponible para tu perfil.</Aviso></div> : null}
       {p.length === 0 ? (

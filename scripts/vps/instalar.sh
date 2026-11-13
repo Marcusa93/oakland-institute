@@ -112,6 +112,8 @@ fi
 cat > /etc/cron.d/$APP <<CRON
 # Oakland Institute: revisión diaria de alertas (lee CRON_SECRET del archivo de variables)
 0 12 * * * $APP . /etc/$APP/app.env && curl -fsS -m 60 -H "Authorization: Bearer \$CRON_SECRET" http://127.0.0.1:$PUERTO/api/tareas/diaria >/dev/null
+# Notificaciones al celular pendientes (reintentos): cada minuto
+* * * * * $APP . /etc/$APP/app.env && curl -fsS -m 50 -H "Authorization: Bearer \$CRON_SECRET" http://127.0.0.1:$PUERTO/api/tareas/push >/dev/null
 CRON
 chmod 644 /etc/cron.d/$APP
 

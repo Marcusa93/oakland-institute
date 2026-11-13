@@ -1,5 +1,6 @@
 "use server";
 
+import { despacharPush } from "@/lib/push";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Resultado } from "@/app/panel/acciones";
@@ -28,6 +29,7 @@ const esquemaNueva = z.object({
 });
 
 export async function iniciarConversacion(datos: z.input<typeof esquemaNueva>): Promise<Resultado & { id?: string }> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   const sesion = await exigirPermiso("mensajes", "crear");
   const r = esquemaNueva.safeParse(datos);
   if (!r.success) return { ok: false, mensaje: r.error.issues[0]?.message ?? "Revisá los datos del mensaje." };
@@ -50,6 +52,7 @@ const esquemaRespuesta = z.object({
 });
 
 export async function responderConversacion(datos: z.input<typeof esquemaRespuesta>): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("mensajes", "ver");
   const r = esquemaRespuesta.safeParse(datos);
   if (!r.success) return { ok: false, mensaje: r.error.issues[0]?.message ?? "Revisá el mensaje." };

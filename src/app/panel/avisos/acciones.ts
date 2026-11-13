@@ -1,5 +1,6 @@
 "use server";
 
+import { despacharPush } from "@/lib/push";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { marcarLeida, type Resultado } from "@/app/panel/acciones";
@@ -28,6 +29,7 @@ function errorEnvio(error: { message?: string }) {
 
 /** Guarda el aviso como borrador y lo envía. La base vuelve a validar el alcance. */
 export async function enviarAviso(datos: unknown): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   const sesion = await exigirPermiso("avisos", "crear");
   const r = esquema.safeParse(datos);
   if (!r.success) return { ok: false, mensaje: "Completá el asunto (hasta 150 caracteres) y el mensaje (hasta 4000)." };
@@ -56,6 +58,7 @@ export async function enviarAviso(datos: unknown): Promise<Resultado> {
 
 /** Reintenta el envío de un borrador propio. Es idempotente: no duplica avisos. */
 export async function reintentarEnvio(datos: unknown): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("avisos", "crear");
   const r = z.object({ id: uuid }).safeParse(datos);
   if (!r.success) return { ok: false, mensaje: "No encontramos ese aviso." };

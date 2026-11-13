@@ -1,5 +1,6 @@
 "use server";
 
+import { despacharPush } from "@/lib/push";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Resultado } from "@/app/panel/acciones";
@@ -221,6 +222,7 @@ export async function registrarRecordatorioWhatsapp(persona: string): Promise<vo
 }
 
 export async function recordarEnApp(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("cuenta_corriente", "aprobar");
   const persona = uuid.safeParse(texto(formData, "persona"));
   if (!persona.success) return { ok: false, mensaje: "Revisá los datos e intentá de nuevo." };
@@ -232,6 +234,7 @@ export async function recordarEnApp(_previo: Resultado | null, formData: FormDat
 }
 
 export async function recordarTodasLasVencidas(): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("cuenta_corriente", "aprobar");
   const supabase = await crearClienteServidor();
   const { data, error } = await supabase.rpc("recordar_vencidas", { p_dias_pausa: 7 });

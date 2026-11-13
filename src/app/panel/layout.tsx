@@ -6,6 +6,7 @@ import { entorno } from "@/config/institucion";
 import type { Perfil } from "@/lib/permisos";
 import { institucion } from "@/config/institucion";
 import { MenuPanel, type SeccionMenu } from "@/componentes/menu-panel";
+import { SincronizarNotificaciones } from "@/componentes/notificaciones";
 import { GRUPOS, menuPara } from "@/lib/navegacion";
 import { exigirSesion } from "@/lib/sesion";
 
@@ -47,6 +48,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         <MenuPanel secciones={secciones} />
         <main id="contenido" className="min-w-0 flex-1 px-4 py-6 lg:px-0">{children}</main>
       </div>
+      <SincronizarNotificaciones />
       <OaklandAI perfil={perfilAI(sesion.perfiles)} ejemplo={entorno() !== "produccion"} enlaceContacto="/panel/avisos" />
     </>
   );

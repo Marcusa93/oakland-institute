@@ -8,7 +8,8 @@ import { createClient } from "@supabase/supabase-js";
  * subida de un audio o de un material de la biblioteca a una ruta que la
  * base ya validó con la sesión del usuario (ver src/app/panel/audio/acciones.ts
  * y src/app/panel/biblioteca/acciones.ts) y (5) borrar el archivo de un
- * material que la base ya dejó borrar al usuario.
+ * material que la base ya dejó borrar al usuario y (6) enviar las
+ * notificaciones al celular de la cola (src/lib/push.ts).
  * Nunca se importa desde componentes cliente ni se usa para lecturas que
  * dependan del usuario.
  */

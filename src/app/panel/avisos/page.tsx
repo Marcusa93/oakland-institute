@@ -6,6 +6,7 @@ import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { marcarAvisoLeido } from "./acciones";
 import { NuevoAviso, ReintentarEnvio } from "./formulario";
+import { AjusteNotificaciones } from "@/componentes/notificaciones";
 
 export const metadata: Metadata = { title: "Avisos" };
 
@@ -90,6 +91,7 @@ export default async function Avisos() {
   return (
     <>
       <Titulo descripcion="Los avisos que te envió el instituto y, si corresponde a tu perfil, los que enviaste vos.">Avisos</Titulo>
+      <AjusteNotificaciones />
 
       <section aria-labelledby="recibidos">
         <h2 id="recibidos" className="mb-3 text-lg font-bold">

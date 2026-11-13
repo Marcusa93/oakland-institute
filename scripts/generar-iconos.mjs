@@ -26,6 +26,15 @@ const salidas = [
   ["public/iconos/apple-touch-icon.png", { tamano: 180 }],
   ["public/iconos/icono-96.png", { tamano: 96 }],
 ];
+// Insignia de la barra de notificaciones de Android: blanca sobre transparente.
+const insignia = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <text x="48" y="60" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-weight="900" font-style="italic" font-size="50" letter-spacing="-2" fill="#ffffff">Oa</text>
+  <rect x="20" y="70" width="56" height="6" rx="3" fill="#ffffff"/>
+</svg>`;
+await sharp(Buffer.from(insignia)).png().toFile("public/iconos/insignia-96.png");
+console.log("✓ public/iconos/insignia-96.png");
+
 for (const [ruta, opciones] of salidas) {
   await sharp(Buffer.from(svg(opciones))).png().toFile(ruta);
   console.log("✓", ruta);

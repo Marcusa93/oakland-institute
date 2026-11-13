@@ -1,5 +1,6 @@
 "use server";
 
+import { despacharPush } from "@/lib/push";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -34,6 +35,7 @@ const esquemaActividad = z.object({
 });
 
 export async function crearActividad(datos: unknown): Promise<Resultado & { id?: string }> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   const sesion = await exigirPermiso("actividades", "aprobar");
   const r = esquemaActividad.safeParse(datos);
   if (!r.success) {
@@ -100,6 +102,7 @@ export async function crearActividad(datos: unknown): Promise<Resultado & { id?:
 const esquemaEstado = z.object({ id: uuid, estado: z.enum(["publicada", "cerrada"]) });
 
 export async function cambiarEstadoActividad(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("actividades", "aprobar");
   const r = esquemaEstado.safeParse({ id: formData.get("id"), estado: formData.get("estado") });
   if (!r.success) return { ok: false, mensaje: "No encontramos esa actividad." };
@@ -135,6 +138,7 @@ const esquemaCorreccion = z.object({
 });
 
 export async function corregirEntrega(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("actividades", "aprobar");
   const t = (k: string) => String(formData.get(k) ?? "").replace(",", ".");
   const r = esquemaCorreccion.safeParse({
@@ -163,6 +167,7 @@ export async function corregirEntrega(_previo: Resultado | null, formData: FormD
 interface EntregaCorregida { id: string; nota: number | null; devolucion: string | null; reaccion: string | null }
 
 export async function publicarCorregidas(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("actividades", "aprobar");
   const r = uuid.safeParse(formData.get("actividad"));
   if (!r.success) return { ok: false, mensaje: "No encontramos esa actividad." };

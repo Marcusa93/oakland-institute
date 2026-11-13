@@ -8,11 +8,13 @@
  *    persona), así que nunca se guardan. Si no hay conexión, se muestra
  *    /sin-conexion.html.
  *  · Formularios, acciones y datos (POST, /api, Supabase): no se tocan.
+ *  · Notificaciones (push): se muestran y, al tocarlas, abren la pantalla
+ *    que corresponde (o enfocan la app si ya está abierta).
  *
  * Al cambiar algo de este archivo, subir VERSION: los teléfonos borran lo
  * guardado de la versión anterior.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const ESTATICOS = `oakland-estaticos-${VERSION}`;
 const PRECARGA = `oakland-base-${VERSION}`;
 const SIN_CONEXION = "/sin-conexion.html";
@@ -72,6 +74,39 @@ self.addEventListener("fetch", (evento) => {
         return guardado;
       }
       return deRed;
+    }),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Notificaciones al celular
+// ---------------------------------------------------------------------------
+self.addEventListener("push", (evento) => {
+  let datos = {};
+  try { datos = evento.data ? evento.data.json() : {}; } catch { datos = { cuerpo: evento.data ? evento.data.text() : "" }; }
+  evento.waitUntil(
+    self.registration.showNotification(datos.titulo || "Oakland Institute", {
+      body: datos.cuerpo || "",
+      icon: "/iconos/icono-192.png",
+      badge: "/iconos/insignia-96.png",
+      lang: "es-AR",
+      // Misma etiqueta = reemplaza a la anterior (por ejemplo, varios mensajes del mismo hilo).
+      tag: datos.etiqueta || undefined,
+      renotify: Boolean(datos.etiqueta),
+      data: { url: datos.url || "/panel" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (evento) => {
+  evento.notification.close();
+  const destino = new URL((evento.notification.data && evento.notification.data.url) || "/panel", self.location.origin);
+  if (destino.origin !== self.location.origin) return;
+  evento.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((ventanas) => {
+      const abierta = ventanas.find((v) => v.url.startsWith(self.location.origin));
+      if (abierta) return abierta.focus().then((v) => (v && "navigate" in v ? v.navigate(destino.href) : v));
+      return self.clients.openWindow(destino.href);
     }),
   );
 });

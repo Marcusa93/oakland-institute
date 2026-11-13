@@ -1,5 +1,6 @@
 "use server";
 
+import { despacharPush } from "@/lib/push";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -39,6 +40,7 @@ export type NuevoMaterial =
  * decide la base). El archivo se vincula después con `confirmarArchivo`.
  */
 export async function crearMaterial(datos: unknown): Promise<NuevoMaterial> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("biblioteca", "crear");
   const r = esquemaNuevo.safeParse(datos);
   if (!r.success) {
@@ -122,6 +124,7 @@ export async function guardarMaterial(_: Resultado | null, formulario: FormData)
 const esquemaCompartir = z.object({ material: uuid, comision: uuid, compartir: z.enum(["si", "no"]) });
 
 export async function compartirMaterial(_: Resultado | null, formulario: FormData): Promise<Resultado> {
+  despacharPush(); // se ejecuta al terminar la acción: manda lo que haya encolado
   await exigirPermiso("biblioteca", "crear");
   const r = esquemaCompartir.safeParse(Object.fromEntries(formulario));
   if (!r.success) return { ok: false, mensaje: "Elegí una comisión." };
