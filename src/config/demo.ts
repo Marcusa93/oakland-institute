@@ -4,7 +4,7 @@
  * servidor: la contraseña nunca viaja al navegador.
  */
 export const CUENTAS_DEMO = [
-  { email: "direccion@demo.invalid", rol: "Dirección", quien: "Ana", detalle: "Tablero, aranceles y toda la gestión" },
+  { email: "direccion@demo.invalid", rol: "Dirección", quien: "Abril Assad", detalle: "Directora y fundadora: tablero, aranceles y toda la gestión" },
   { email: "administracion@demo.invalid", rol: "Administración", quien: "Bruno", detalle: "Consultas, inscripciones y cobros" },
   { email: "docente@demo.invalid", rol: "Docente", quien: "Carla", detalle: "Sus comisiones y la asistencia" },
   { email: "tutor@demo.invalid", rol: "Familia", quien: "Diego", detalle: "Cursada y cuenta de su hija Emilia" },

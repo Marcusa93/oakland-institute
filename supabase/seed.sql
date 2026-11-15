@@ -84,7 +84,7 @@ on conflict (id) do nothing;
 
 -- Personas y estudiantes de ejemplo (sin cuentas).
 insert into public.personas (id, nombres, apellidos) values
-  ('00000000-0000-4000-8000-000000001001', 'Ana', 'Directora Demo'),
+  ('00000000-0000-4000-8000-000000001001', 'Abril', 'Assad'), -- directora y fundadora
   ('00000000-0000-4000-8000-000000001002', 'Bruno', 'Administrador Demo'),
   ('00000000-0000-4000-8000-000000001003', 'Carla', 'Docente Demo'),
   ('00000000-0000-4000-8000-000000001004', 'Diego', 'Tutor Demo'),
