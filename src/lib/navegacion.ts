@@ -24,6 +24,7 @@ const ITEMS: ItemMenu[] = [
   // Todos
   { href: "/panel/mensajes", etiqueta: "Mensajes", grupo: "Comunicación", icono: "💬", recurso: "mensajes", accion: "ver" },
   { href: "/panel/avisos", etiqueta: "Avisos", grupo: "Comunicación", icono: "📣", recurso: "avisos", accion: "ver" },
+  { href: "/panel/notificaciones", etiqueta: "Notificaciones", grupo: "Comunicación", icono: "🔔", recurso: "avisos", accion: "ver" },
   // Gestión
   { href: "/panel/consultas", etiqueta: "Consultas", grupo: "Gestión", icono: "📥", recurso: "consultas", accion: "ver" },
   { href: "/panel/estudiantes", etiqueta: "Estudiantes", grupo: "Gestión", icono: "🧑‍🎓", recurso: "estudiantes", accion: "crear" },

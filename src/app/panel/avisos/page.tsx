@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Aviso, Boton, EstadoVacio, Insignia, Tabla, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
+import { Aviso, Boton, Enlace, EstadoVacio, Insignia, Tabla, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
 import { fechaHora } from "@/lib/formato";
 import { esGestion, puede } from "@/lib/permisos";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { marcarAvisoLeido } from "./acciones";
 import { NuevoAviso, ReintentarEnvio } from "./formulario";
-import { AjusteNotificaciones } from "@/componentes/notificaciones";
 
 export const metadata: Metadata = { title: "Avisos" };
 
@@ -90,8 +89,8 @@ export default async function Avisos() {
 
   return (
     <>
-      <Titulo descripcion="Los avisos que te envió el instituto y, si corresponde a tu perfil, los que enviaste vos.">Avisos</Titulo>
-      <AjusteNotificaciones />
+      <Titulo descripcion="Los avisos que te envió el instituto y, si corresponde a tu perfil, los que enviaste vos."
+        acciones={<Enlace href="/panel/notificaciones" variante="secundario">🔔 Notificaciones al celular</Enlace>}>Avisos</Titulo>
 
       <section aria-labelledby="recibidos">
         <h2 id="recibidos" className="mb-3 text-lg font-bold">

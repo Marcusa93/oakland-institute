@@ -6,7 +6,7 @@ import { borrarSuscripcion, guardarSuscripcion, probarNotificacion } from "@/app
 /**
  * Notificaciones al celular de este dispositivo.
  *  · «aviso»: tarjeta en el inicio para activarlas (se puede cerrar).
- *  · «ajuste»: estado completo con activar, probar y desactivar (en Avisos).
+ *  · «ajuste»: estado completo con activar, probar y desactivar (en Notificaciones).
  * Necesitan el service worker (solo en producción) y, en iPhone, que la app
  * esté instalada en la pantalla de inicio (iOS 16.4 o posterior).
  */
@@ -95,7 +95,7 @@ export function AvisoNotificaciones() {
   );
 }
 
-/** Ajuste completo de este dispositivo (en la página de Avisos). */
+/** Ajuste completo de este dispositivo (en la página de Notificaciones). */
 export function AjusteNotificaciones() {
   const { estado, actualizar } = useNotificaciones();
   const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null);
@@ -118,7 +118,7 @@ export function AjusteNotificaciones() {
       <p className="font-bold">🔔 Notificaciones en este dispositivo</p>
       {estado === "activas" ? (
         <>
-          <p className="mt-1 text-sm text-suave">Activadas. Te avisamos de avisos, mensajes, actividades, devoluciones y material nuevo.</p>
+          <p className="mt-1 text-sm text-suave">Activadas. Abajo elegís qué te avisamos.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button type="button" disabled={ocupado} onClick={() => empezar(async () => { const r = await probarNotificacion(); setMensaje({ ok: r.ok, texto: r.mensaje }); })}
               className={`${boton} bg-marca text-sobre-marca hover:bg-marca-fuerte`}>Mandarme una de prueba</button>

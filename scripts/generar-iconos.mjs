@@ -1,6 +1,7 @@
-// Íconos de la app instalable (PWA). Uso: node scripts/generar-iconos.mjs
+// Íconos de la app instalable (PWA) y favicon. Uso: node scripts/generar-iconos.mjs
 // Fondo azul marino a sangre (sirve como «maskable»: Android lo recorta en
 // círculo o squircle) y el monograma dentro de la zona segura central (80 %).
+import { writeFileSync } from "node:fs";
 import sharp from "sharp";
 
 const MARINO = "#1c2a6b";
@@ -39,3 +40,28 @@ for (const [ruta, opciones] of salidas) {
   await sharp(Buffer.from(svg(opciones))).png().toFile(ruta);
   console.log("✓", ruta);
 }
+
+// Favicon de la pestaña: el mismo monograma con esquinas redondeadas, en
+// 16, 32 y 48 px dentro de un .ico (cada tamaño va como PNG, que todos los
+// navegadores actuales leen). Next lo publica solo desde src/app/favicon.ico.
+const tamanosFavicon = [16, 32, 48];
+const pngs = await Promise.all(tamanosFavicon.map((t) => sharp(Buffer.from(svg({ tamano: t, escala: 1.38, redondeado: true }))).png().toBuffer()));
+const cabecera = Buffer.alloc(6 + 16 * pngs.length);
+cabecera.writeUInt16LE(0, 0); // reservado
+cabecera.writeUInt16LE(1, 2); // tipo: ícono
+cabecera.writeUInt16LE(pngs.length, 4);
+let desplazamiento = cabecera.length;
+pngs.forEach((png, i) => {
+  const e = 6 + 16 * i;
+  cabecera.writeUInt8(tamanosFavicon[i], e); // ancho
+  cabecera.writeUInt8(tamanosFavicon[i], e + 1); // alto
+  cabecera.writeUInt8(0, e + 2); // sin paleta
+  cabecera.writeUInt8(0, e + 3);
+  cabecera.writeUInt16LE(1, e + 4); // planos
+  cabecera.writeUInt16LE(32, e + 6); // bits por píxel
+  cabecera.writeUInt32LE(png.length, e + 8);
+  cabecera.writeUInt32LE(desplazamiento, e + 12);
+  desplazamiento += png.length;
+});
+writeFileSync("src/app/favicon.ico", Buffer.concat([cabecera, ...pngs]));
+console.log("✓ src/app/favicon.ico");

@@ -1,10 +1,12 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { enviarPendientes, pushConfigurado } from "@/lib/push";
 import { exigirSesion, mensajeDeError } from "@/lib/sesion";
 import { crearClienteAdmin } from "@/lib/supabase/admin";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { TIPOS, type TipoNotificacion } from "./tipos";
 
 const esquema = z.object({
   endpoint: z.string().startsWith("https://").max(1000),
@@ -51,3 +53,29 @@ export async function probarNotificacion(): Promise<ResultadoPush> {
     : { ok: false, mensaje: "No pudo salir ahora; se reintenta sola en un minuto." };
 }
 
+
+/**
+ * Qué notificaciones le llegan al celular. Solo cambia los tipos que se
+ * mostraron en la pantalla (campo «mostrados»): los demás quedan como estaban.
+ */
+export async function guardarPreferencias(_previo: ResultadoPush | null, datos: FormData): Promise<ResultadoPush> {
+  await exigirSesion();
+  const conocido = (v: FormDataEntryValue): v is TipoNotificacion => (TIPOS as readonly string[]).includes(String(v));
+  const mostrados = datos.getAll("mostrados").filter(conocido);
+  if (mostrados.length === 0) return { ok: false, mensaje: "No recibimos ninguna preferencia. Actualizá la página y probá de nuevo." };
+  const activos = new Set(datos.getAll("activo").filter(conocido));
+  const preferencias = Object.fromEntries(mostrados.map((t) => [t, activos.has(t)]));
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase.rpc("guardar_preferencias_push", { p_preferencias: preferencias });
+  if (error) return { ok: false, mensaje: mensajeDeError(error) };
+  revalidatePath("/panel/notificaciones");
+  const encendidos = mostrados.filter((t) => activos.has(t)).length;
+  return {
+    ok: true,
+    mensaje: encendidos === mostrados.length
+      ? "Listo: te avisamos de todo."
+      : encendidos === 0
+        ? "Listo: no te llegan notificaciones al celular. Todo sigue apareciendo en el panel."
+        : "Listo: guardamos tus preferencias.",
+  };
+}
