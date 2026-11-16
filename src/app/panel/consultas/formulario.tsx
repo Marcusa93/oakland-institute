@@ -6,15 +6,16 @@ import { AreaTexto, Aviso, Boton, Campo, Selector } from "@/componentes/ui";
 import { PLANTILLAS_CONSULTA, type PlantillaConsulta } from "@/lib/whatsapp";
 import { actualizarConsulta, cargarConsulta, registrarContacto } from "./acciones";
 import { ESTADOS } from "./estados";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 export function Seguimiento({ consulta, esMia }: {
   consulta: { id: string; estado: string; proxima_accion: string | null; proxima_accion_en: string | null; motivo_perdida: string | null };
   esMia: boolean;
 }) {
-  const [estado, accion, guardando] = useActionState(actualizarConsulta, null);
+  const [estado, accion, guardando] = useFormulario(actualizarConsulta, null);
   const id = consulta.id;
   return (
-    <form action={accion} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <form {...accion} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <input type="hidden" name="id" value={id} />
       <Selector id={`estado-${id}`} name="estado" etiqueta="Estado" defaultValue={consulta.estado}>
         {ESTADOS.map(([v, e]) => <option key={v} value={v}>{e}</option>)}

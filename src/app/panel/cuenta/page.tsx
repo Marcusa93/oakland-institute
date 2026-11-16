@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- no hay tipos generados de la base: filas tipadas a mano */
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Aviso, EstadoVacio, Insignia, Tabla, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
 import { fecha, hoyISO, pesos } from "@/lib/formato";
 import { esGestion, puede } from "@/lib/permisos";
@@ -142,11 +143,16 @@ export default async function Cuenta() {
                     ) : <span className="text-suave">—</span>}
                   </td>
                   <td>
+                    {p.estado === "confirmado" ? (
+                      <Link href={`/panel/cuenta/recibo/${p.id}`} className="block font-semibold text-marca underline-offset-4 hover:underline">
+                        Comprobante del instituto
+                      </Link>
+                    ) : null}
                     {p.comprobante ? (
                       <a href={`/panel/cuenta/comprobante/${p.comprobante.id}`} target="_blank" rel="noreferrer" className="font-semibold text-marca underline-offset-4 hover:underline">
-                        Ver<span className="sr-only"> comprobante {p.comprobante.nombre} (se abre en otra pestaña)</span>
+                        Ver lo que adjuntaste<span className="sr-only"> ({p.comprobante.nombre}, se abre en otra pestaña)</span>
                       </a>
-                    ) : <span className="text-suave">Sin adjunto</span>}
+                    ) : p.estado === "confirmado" ? null : <span className="text-suave">Sin adjunto</span>}
                   </td>
                 </tr>
               );

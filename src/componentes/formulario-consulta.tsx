@@ -1,14 +1,15 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { EVENTO_PRELLENAR, type Prellenado } from "@/app/landing/prellenar";
 import { enviarConsulta, type EstadoConsulta } from "@/app/acciones";
 import { AreaTexto, Aviso, Boton, Campo, Selector } from "@/componentes/ui";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 const inicial: EstadoConsulta = { ok: false };
 
 export function FormularioConsulta({ cursos, textoPrivacidad }: { cursos: Array<{ id: string; nombre: string }>; textoPrivacidad: string }) {
-  const [estado, accion, enviando] = useActionState(enviarConsulta, inicial);
+  const [estado, accion, enviando] = useFormulario(enviarConsulta, inicial);
   const [paraMenor, setParaMenor] = useState(false);
   const [tipo, setTipo] = useState<"consulta" | "preinscripcion">("consulta");
   const [curso, setCurso] = useState("");
@@ -30,7 +31,7 @@ export function FormularioConsulta({ cursos, textoPrivacidad }: { cursos: Array<
   if (estado.ok) return <Aviso tono="exito">{estado.mensaje}</Aviso>;
 
   return (
-    <form action={accion} className="grid gap-4 sm:grid-cols-2" noValidate>
+    <form {...accion} className="grid gap-4 sm:grid-cols-2" noValidate>
       <fieldset className="sm:col-span-2">
         <legend className="text-sm font-medium">¿Qué querés hacer?</legend>
         <div className="mt-1 flex flex-wrap gap-4 text-sm">
@@ -62,7 +63,10 @@ export function FormularioConsulta({ cursos, textoPrivacidad }: { cursos: Array<
       <div className="sm:col-span-2">
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" name="acepta" className="mt-1" aria-describedby="acepta-texto" />
-          <span id="acepta-texto">{textoPrivacidad}</span>
+          <span id="acepta-texto">
+            {textoPrivacidad}{" "}
+            <a href="/privacidad" target="_blank" rel="noopener" className="font-semibold text-marca underline">Política de privacidad</a>
+          </span>
         </label>
         {e.acepta ? <p className="mt-1 text-xs font-medium text-peligro">{e.acepta}</p> : null}
       </div>

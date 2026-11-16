@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, type ReactNode } from "react";
+import { useFormulario } from "@/componentes/usar-formulario";
 import { Aviso, Boton, Campo, Selector } from "@/componentes/ui";
 import type { Resultado } from "@/app/panel/acciones";
 import { crearEstudiante, crearResponsableEInvitar, type ResultadoAlta } from "./acciones";
@@ -11,14 +12,20 @@ type Accion = (previo: Resultado | null, formData: FormData) => Promise<Resultad
 /**
  * Formulario genérico: recibe una server action y los campos como hijos.
  * Muestra el resultado con un aviso que anuncian los lectores de pantalla.
+ *
+ * Si la acción falla, lo escrito queda en pantalla para corregirlo (React
+ * vacía el formulario después de cada envío; acá solo se vacía si salió bien).
+ * Sin JavaScript funciona igual, con el envío común del formulario.
  */
-export function Formulario({ accion, children, boton, enviando = "Guardando…", variante = "primario", className = "grid gap-3 sm:grid-cols-2" }: {
+export function Formulario({ accion, children, boton, enviando = "Guardando…", variante = "primario", className = "grid gap-3 sm:grid-cols-2", confirmar }: {
   accion: Accion; children?: ReactNode; boton: string; enviando?: string;
   variante?: "primario" | "secundario" | "peligro"; className?: string;
+  /** Pregunta antes de enviar (acciones que no se pueden deshacer). */
+  confirmar?: string;
 }) {
-  const [estado, enviar, pendiente] = useActionState(accion, null);
+  const [estado, form, pendiente] = useFormulario(accion, null, { confirmar });
   return (
-    <form action={enviar} className={className}>
+    <form {...form} className={className}>
       {children}
       <div className="flex items-end">
         <Boton type="submit" variante={variante} disabled={pendiente}>{pendiente ? enviando : boton}</Boton>

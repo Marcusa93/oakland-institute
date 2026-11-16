@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { AreaTexto, Aviso, Boton, Campo, Selector } from "@/componentes/ui";
 import { HABILIDADES, TIPOS, tieneHueco, type TipoEjercicio } from "@/app/panel/practica/comun";
 import { Probador } from "@/app/panel/practica/ejercicio";
 import { cambiarEstado, guardarEjercicio } from "./acciones";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 export interface DatosEjercicio {
   id?: string;
@@ -28,7 +29,7 @@ const AYUDA_TIPO: Record<TipoEjercicio, string> = {
 };
 
 export function FormularioEjercicio({ inicial, niveles }: { inicial?: DatosEjercicio; niveles: { id: string; nombre: string }[] }) {
-  const [estado, accion, guardando] = useActionState(guardarEjercicio, null);
+  const [estado, accion, guardando] = useFormulario(guardarEjercicio, null);
   const [d, setD] = useState<DatosEjercicio>(inicial ?? {
     habilidad: "vocabulario", tipo: "opcion", nivel_id: null, dificultad: 1, enunciado: "", opciones: [], respuesta: "", explicacion: "", audio_texto: "",
   });
@@ -41,7 +42,7 @@ export function FormularioEjercicio({ inicial, niveles }: { inicial?: DatosEjerc
 
   return (
     <div className="grid gap-6 xl:grid-cols-2">
-      <form action={accion} className="grid gap-4">
+      <form {...accion} className="grid gap-4">
         <input type="hidden" name="id" value={inicial?.id ?? ""} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Selector id={`hab-${id}`} name="habilidad" etiqueta="Habilidad" value={d.habilidad} onChange={(e) => set("habilidad", e.target.value)}>
@@ -106,11 +107,11 @@ const ACCIONES: Record<string, { estado: string; texto: string; variante: "prima
 };
 
 export function AccionesEstado({ id, estado: actual }: { id: string; estado: string }) {
-  const [estado, accion, enviando] = useActionState(cambiarEstado, null);
+  const [estado, accion, enviando] = useFormulario(cambiarEstado, null);
   return (
     <div className="flex flex-wrap items-center gap-2">
       {(ACCIONES[actual] ?? []).map((a) => (
-        <form key={a.estado} action={accion}>
+        <form key={a.estado} {...accion}>
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="estado" value={a.estado} />
           <Boton type="submit" variante={a.variante} disabled={enviando}>{a.texto}</Boton>

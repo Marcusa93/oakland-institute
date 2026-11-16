@@ -46,7 +46,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       </header>
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col lg:flex-row lg:gap-8 lg:px-4">
         <MenuPanel secciones={secciones} />
-        <main id="contenido" className="min-w-0 flex-1 px-4 py-6 lg:px-0">{children}</main>
+        <main id="contenido" className="min-w-0 flex-1 px-4 pb-28 pt-6 lg:px-0">{children}</main>
       </div>
       <SincronizarNotificaciones />
       <OaklandAI perfil={perfilAI(sesion.perfiles)} ejemplo={entorno() !== "produccion"} enlaceContacto="/panel/avisos" />

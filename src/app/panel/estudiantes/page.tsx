@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Aviso, Boton, Campo, Enlace, EstadoVacio, Insignia, Selector, Tabla, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
+import { Aviso, Boton, Campo, Descarga, Enlace, EstadoVacio, Insignia, Selector, Tabla, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
 import { fecha, nombreCompleto } from "@/lib/formato";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
@@ -10,20 +10,28 @@ import { AltaEstudiante } from "./formulario";
 export const metadata: Metadata = { title: "Estudiantes" };
 
 const TONO: Record<string, Tono> = { aspirante: "alerta", activo: "exito", inactivo: "neutro", egresado: "marca" };
-const LIMITE = 100;
+const POR_PAGINA = 50;
 
-export default async function Estudiantes({ searchParams }: { searchParams: Promise<{ q?: string; estado?: string }> }) {
+export default async function Estudiantes({ searchParams }: { searchParams: Promise<{ q?: string; estado?: string; pagina?: string }> }) {
   await exigirPermiso("estudiantes", "crear");
-  const { q = "", estado = "" } = await searchParams;
+  const { q = "", estado = "", pagina: paginaPedida = "1" } = await searchParams;
+  const pagina = Math.max(1, Math.min(1000, Number.parseInt(paginaPedida, 10) || 1));
   const etiqueta: Record<string, string> = Object.fromEntries(ESTADOS_ESTUDIANTE);
   const estadoValido = estado in etiqueta ? estado : "";
   const supabase = await crearClienteServidor();
-  const { filas, error } = await buscarEstudiantes(supabase, q, { estado: estadoValido || undefined, limite: LIMITE });
+  const { filas, error, hayMas } = await buscarEstudiantes(supabase, q, { estado: estadoValido || undefined, limite: POR_PAGINA, desde: (pagina - 1) * POR_PAGINA });
+  const enlacePagina = (n: number) => `/panel/estudiantes?${new URLSearchParams({ ...(q ? { q } : {}), ...(estadoValido ? { estado: estadoValido } : {}), pagina: String(n) })}`;
   const filtrando = Boolean(q.trim() || estadoValido);
 
   return (
     <>
-      <Titulo descripcion="Legajos del instituto. Desde la ficha se ven la trayectoria, los responsables y las observaciones de cada estudiante.">
+      <Titulo descripcion="Legajos del instituto. Desde la ficha se ven la trayectoria, los responsables y las observaciones de cada estudiante."
+        acciones={
+          <div className="flex flex-wrap gap-2">
+            <Descarga href="/panel/estudiantes/exportar" />
+            <Enlace href="/panel/estudiantes/importar" variante="secundario">Importar desde una planilla</Enlace>
+          </div>
+        }>
         Estudiantes
       </Titulo>
 
@@ -55,7 +63,13 @@ export default async function Estudiantes({ searchParams }: { searchParams: Prom
               </tr>
             ))}
           </Tabla>
-          {filas.length >= LIMITE ? <p className="mt-2 text-sm text-suave">Se muestran los primeros {LIMITE}. Usá la búsqueda para encontrar al resto.</p> : null}
+          {pagina > 1 || hayMas ? (
+            <nav aria-label="Páginas del listado" className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+              {pagina > 1 ? <Enlace href={enlacePagina(pagina - 1)} variante="secundario">← Anteriores</Enlace> : null}
+              <span className="text-suave">Página {pagina}</span>
+              {hayMas ? <Enlace href={enlacePagina(pagina + 1)} variante="secundario">Siguientes →</Enlace> : null}
+            </nav>
+          ) : null}
         </>
       ) : null}
 

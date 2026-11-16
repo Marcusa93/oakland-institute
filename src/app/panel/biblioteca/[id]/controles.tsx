@@ -1,13 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Aviso, Boton } from "@/componentes/ui";
 import { compartirMaterial, eliminarMaterial, guardarMaterial } from "../acciones";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 export function Compartir({ material, comision, compartido }: { material: string; comision: { id: string; texto: string }; compartido: boolean }) {
-  const [estado, accion, enviando] = useActionState(compartirMaterial, null);
+  const [estado, accion, enviando] = useFormulario(compartirMaterial, null);
   return (
-    <form action={accion} className="flex flex-wrap items-center gap-2">
+    <form {...accion} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="material" value={material} />
       <input type="hidden" name="comision" value={comision.id} />
       <button name="compartir" value={compartido ? "no" : "si"} disabled={enviando} aria-pressed={compartido}
@@ -20,10 +21,10 @@ export function Compartir({ material, comision, compartido }: { material: string
 }
 
 export function EditarMaterial({ m }: { m: { id: string; titulo: string; descripcion: string | null; nivel: string | null; texto: string | null } }) {
-  const [estado, accion, guardando] = useActionState(guardarMaterial, null);
+  const [estado, accion, guardando] = useFormulario(guardarMaterial, null);
   const [texto, setTexto] = useState(m.texto ?? "");
   return (
-    <form action={accion} className="space-y-3">
+    <form {...accion} className="space-y-3">
       <input type="hidden" name="id" value={m.id} />
       <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
         <label className="block"><span className="text-sm font-medium">Título</span>

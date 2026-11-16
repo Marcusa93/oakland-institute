@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
 import type { Resultado } from "@/app/panel/acciones";
 import { Aviso, Boton, Campo } from "@/componentes/ui";
 import { informarTransferencia, prepararComprobante } from "./acciones";
 import { MENSAJE_TAMANO, MENSAJE_TIPO, TAMANO_MAXIMO, TIPOS_COMPROBANTE } from "./comprobantes";
 import { crearClienteNavegador } from "./navegador";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 /**
  * Informar una transferencia. Si hay comprobante: el servidor registra el
@@ -33,9 +33,9 @@ async function enviar(_previo: Resultado | null, formData: FormData): Promise<Re
 }
 
 export function InformarTransferencia({ hoy, adjuntos }: { hoy: string; adjuntos: boolean }) {
-  const [estado, accion, enviando] = useActionState(enviar, null);
+  const [estado, accion, enviando] = useFormulario(enviar, null);
   return (
-    <form action={accion} className="grid gap-3 sm:grid-cols-2">
+    <form {...accion} className="grid gap-3 sm:grid-cols-2">
       <Campo id="transf-importe" name="importe" etiqueta="Importe transferido" inputMode="decimal" placeholder="45.000,50" required autoComplete="off" />
       <Campo id="transf-fecha" name="fecha" type="date" etiqueta="Fecha de la transferencia" defaultValue={hoy} max={hoy} required />
       <Campo id="transf-nota" name="nota" etiqueta="Nota (opcional)" maxLength={300} className="sm:col-span-2"

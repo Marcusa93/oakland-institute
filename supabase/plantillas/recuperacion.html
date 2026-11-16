@@ -1,0 +1,26 @@
+<!-- Asunto: Elegí una contraseña nueva -->
+<!doctype html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:Arial,Helvetica,sans-serif;color:#1a2230">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:24px 12px">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden">
+        <tr><td style="background:#1c2a6b;padding:20px 28px">
+          <span style="font-size:24px;font-weight:800;font-style:italic;color:#ffffff">Oakland</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:3px;color:#8fb8ff;text-transform:uppercase">&nbsp;Institute</span>
+        </td></tr>
+        <tr><td style="padding:28px">
+          <h1 style="margin:0 0 12px;font-size:22px;color:#1c2a6b">Contraseña nueva</h1>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.5">Pediste entrar al sistema de Oakland Institute con una contraseña nueva. Elegila con el botón de abajo.</p>
+          <p style="margin:0 0 24px">
+            <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/clave"
+               style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px">Elegir contraseña</a>
+          </p>
+          <p style="margin:0;font-size:13px;color:#4c586b;line-height:1.5">El enlace vence en 1 hora. Si no lo pediste vos, ignorá este correo: tu contraseña no cambia.</p>
+        </td></tr>
+        <tr><td style="padding:16px 28px;background:#f4f6fb;font-size:12px;color:#4c586b">Oakland Institute · Monteros, Tucumán</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

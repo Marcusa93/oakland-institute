@@ -177,6 +177,14 @@ export async function reservar(_previo: Resultado | null, formData: FormData): P
     `Vacante reservada por ${d.horas} horas.`, rutas(d.comision));
 }
 
+export async function cancelarReserva(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
+  await exigirPermiso("inscripciones", "editar");
+  const r = esquemaQuitar.safeParse({ comision: texto(formData, "comision"), id: texto(formData, "id") });
+  if (!r.success) return fallo("No pudimos identificar la reserva. Actualizá la página.");
+  const supabase = await crearClienteServidor();
+  return resolver(supabase.rpc("cancelar_reserva", { p_reserva: r.data.id }), "Reserva cancelada: el lugar quedó libre.", rutas(r.data.comision));
+}
+
 const esquemaPar = z.object({ comision: uuid, estudiante: uuid });
 
 export async function agregarAEspera(_previo: Resultado | null, formData: FormData): Promise<Resultado> {

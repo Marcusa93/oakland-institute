@@ -1,13 +1,14 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Aviso, Boton } from "@/componentes/ui";
 import { recordarEnApp, recordarTodasLasVencidas, registrarRecordatorioWhatsapp } from "../acciones";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 const chip = "inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold";
 
 export function Recordar({ persona, whatsapp }: { persona: string; whatsapp: string | null }) {
-  const [estado, accion, enviando] = useActionState(recordarEnApp, null);
+  const [estado, accion, enviando] = useFormulario(recordarEnApp, null);
   const [, empezar] = useTransition();
   const [abierto, setAbierto] = useState(false);
   return (
@@ -20,7 +21,7 @@ export function Recordar({ persona, whatsapp }: { persona: string; whatsapp: str
             <span aria-hidden>💬</span>Recordar por WhatsApp
           </a>
         ) : null}
-        <form action={accion}>
+        <form {...accion}>
           <input type="hidden" name="persona" value={persona} />
           <button disabled={enviando} className={`${chip} border border-borde hover:bg-marca-suave disabled:opacity-60`}>
             <span aria-hidden>🔔</span>{enviando ? "Enviando…" : "Avisar en la app"}
@@ -34,9 +35,10 @@ export function Recordar({ persona, whatsapp }: { persona: string; whatsapp: str
 }
 
 export function RecordarTodas({ cantidad }: { cantidad: number }) {
-  const [estado, accion, enviando] = useActionState(recordarTodasLasVencidas, null);
+  const [estado, accion, enviando] = useFormulario(recordarTodasLasVencidas, null,
+    { confirmar: `¿Enviar el aviso en la app a ${cantidad} ${cantidad === 1 ? "familia" : "familias"}?` });
   return (
-    <form action={accion} onSubmit={(e) => { if (!confirm(`¿Enviar el aviso en la app a ${cantidad} ${cantidad === 1 ? "familia" : "familias"}?`)) e.preventDefault(); }}
+    <form {...accion}
       className="flex flex-wrap items-center gap-3">
       <Boton disabled={enviando || cantidad === 0}>{enviando ? "Enviando…" : `Avisar en la app a ${cantidad} ${cantidad === 1 ? "familia" : "familias"}`}</Boton>
       {estado ? <Aviso tono={estado.ok ? "exito" : "peligro"}>{estado.mensaje}</Aviso> : null}

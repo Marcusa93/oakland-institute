@@ -28,10 +28,13 @@ const ITEMS: ItemMenu[] = [
   { href: "/panel/consultas", etiqueta: "Consultas", grupo: "Gestión", icono: "📥", recurso: "consultas", accion: "ver" },
   { href: "/panel/estudiantes", etiqueta: "Estudiantes", grupo: "Gestión", icono: "🧑‍🎓", recurso: "estudiantes", accion: "crear" },
   { href: "/panel/comisiones", etiqueta: "Comisiones", grupo: "Gestión", icono: "🗓️", recurso: "comisiones", accion: "crear" },
+  { href: "/panel/oferta", etiqueta: "Oferta académica", grupo: "Gestión", icono: "🏫", recurso: "oferta_publica", accion: "editar" },
   { href: "/panel/cobros", etiqueta: "Cobros", grupo: "Gestión", icono: "💰", recurso: "cuenta_corriente", accion: "aprobar" },
   { href: "/panel/gastos", etiqueta: "Gastos", grupo: "Gestión", icono: "🧾", recurso: "gastos", accion: "ver" },
   // Dirección
   { href: "/panel/tablero", etiqueta: "Tablero", grupo: "Instituto", icono: "📈", recurso: "tablero", accion: "ver" },
+  { href: "/panel/aranceles", etiqueta: "Aranceles y becas", grupo: "Instituto", icono: "🏷️", recurso: "aranceles_y_beneficios", accion: "ver" },
+  { href: "/panel/personal", etiqueta: "Equipo", grupo: "Instituto", icono: "🪪", recurso: "roles_y_configuracion", accion: "ver" },
   { href: "/panel/docentes", etiqueta: "Docentes", grupo: "Instituto", icono: "👩‍🏫", recurso: "evaluacion_docente", accion: "crear" },
   { href: "/panel/sitio", etiqueta: "Sitio web", grupo: "Instituto", icono: "🌐", recurso: "sitio", accion: "editar" },
 ];

@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Grabador, Reproductor } from "@/componentes/grabador";
 import { Aviso, Boton } from "@/componentes/ui";
 import { cambiarEstadoActividad, corregirEntrega, publicarCorregidas } from "./acciones";
 import { FRASES_DEVOLUCION, REACCIONES } from "./comun";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 export function Correccion({ entrega, actividad, puntajeMax, sugerida, audioDevolucion = null }: {
   entrega: { id: string; nota: string | null; devolucion: string | null; reaccion: string | null; publicada: boolean; estado: string };
@@ -15,7 +16,7 @@ export function Correccion({ entrega, actividad, puntajeMax, sugerida, audioDevo
   /** Enlace firmado de la devolución hablada ya guardada. */
   audioDevolucion?: string | null;
 }) {
-  const [estado, accion, guardando] = useActionState(corregirEntrega, null);
+  const [estado, accion, guardando] = useFormulario(corregirEntrega, null);
   const [audioNuevo, setAudioNuevo] = useState<string | null>(null);
   const [quitarAudio, setQuitarAudio] = useState(false);
   const [grabarVoz, setGrabarVoz] = useState(false);
@@ -25,7 +26,7 @@ export function Correccion({ entrega, actividad, puntajeMax, sugerida, audioDevo
   const id = entrega.id;
 
   return (
-    <form action={accion} className="mt-4 space-y-4 border-t border-borde pt-4">
+    <form {...accion} className="mt-4 space-y-4 border-t border-borde pt-4">
       <input type="hidden" name="entrega" value={id} />
       <input type="hidden" name="actividad" value={actividad} />
       <input type="hidden" name="reaccion" value={reaccion} />
@@ -104,9 +105,9 @@ export function Correccion({ entrega, actividad, puntajeMax, sugerida, audioDevo
 }
 
 export function PublicarTodas({ actividad, cantidad }: { actividad: string; cantidad: number }) {
-  const [estado, accion, enviando] = useActionState(publicarCorregidas, null);
+  const [estado, accion, enviando] = useFormulario(publicarCorregidas, null);
   return (
-    <form action={accion} className="flex flex-wrap items-center gap-2">
+    <form {...accion} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="actividad" value={actividad} />
       <Boton type="submit" disabled={enviando || cantidad === 0}>
         {enviando ? "Publicando…" : `Publicar todas las corregidas${cantidad ? ` (${cantidad})` : ""}`}
@@ -119,9 +120,9 @@ export function PublicarTodas({ actividad, cantidad }: { actividad: string; cant
 export function CambiarEstado({ actividad, estado: destino, etiqueta, variante = "secundario", confirmar }: {
   actividad: string; estado: "publicada" | "cerrada"; etiqueta: string; variante?: "primario" | "secundario"; confirmar?: string;
 }) {
-  const [estado, accion, enviando] = useActionState(cambiarEstadoActividad, null);
+  const [estado, accion, enviando] = useFormulario(cambiarEstadoActividad, null, { confirmar });
   return (
-    <form action={accion} onSubmit={(e) => { if (confirmar && !window.confirm(confirmar)) e.preventDefault(); }} className="flex flex-wrap items-center gap-2">
+    <form {...accion} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="id" value={actividad} />
       <input type="hidden" name="estado" value={destino} />
       <Boton type="submit" variante={variante} disabled={enviando}>{enviando ? "Guardando…" : etiqueta}</Boton>

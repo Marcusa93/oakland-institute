@@ -294,7 +294,10 @@ export default async function Landing() {
               </ul>
             ) : null}
           </div>
-          <Link href="/ingresar" className="mb-6 font-semibold text-cielo hover:underline"><T es="Acceso para alumnos, familias y docentes" en="Login for students, families and teachers" /></Link>
+          <div className="mb-6 flex flex-col items-start gap-2 sm:items-end">
+            <Link href="/ingresar" className="font-semibold text-cielo hover:underline"><T es="Acceso para alumnos, familias y docentes" en="Login for students, families and teachers" /></Link>
+            <Link href="/privacidad" className="text-sm text-white/80 hover:underline"><T es="Política de privacidad" en="Privacy policy" /></Link>
+          </div>
         </div>
         <p aria-hidden className="mx-auto -mb-[0.22em] max-w-6xl select-none px-4 text-[clamp(5rem,22vw,17rem)] font-extrabold italic leading-none tracking-[-0.06em] text-acento">
           Oakland

@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Aviso, Boton } from "@/componentes/ui";
 import { actualizarAlerta, avisarFamilia, revisarAlertas } from "./acciones";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 export function RevisarAhora() {
   const [resultado, setResultado] = useState<{ ok: boolean; mensaje: string } | null>(null);
@@ -25,9 +26,9 @@ const ACCIONES: Record<string, [string, string][]> = {
 };
 
 export function GestionAlerta({ id, estado, nota }: { id: string; estado: string; nota: string | null }) {
-  const [res, accion, guardando] = useActionState(actualizarAlerta, null);
+  const [res, accion, guardando] = useFormulario(actualizarAlerta, null);
   return (
-    <form action={accion} className="mt-3 space-y-2">
+    <form {...accion} className="mt-3 space-y-2">
       <input type="hidden" name="id" value={id} />
       <label htmlFor={`nota-${id}`} className="text-sm font-medium">Nota de seguimiento</label>
       <textarea id={`nota-${id}`} name="nota" rows={2} maxLength={1000} defaultValue={nota ?? ""}
@@ -45,7 +46,7 @@ export function GestionAlerta({ id, estado, nota }: { id: string; estado: string
 export function AvisoFamilia({ alerta, responsables, asunto, cuerpo }: {
   alerta: string; responsables: { id: string; nombre: string; parentesco: string | null }[]; asunto: string; cuerpo: string;
 }) {
-  const [res, accion, enviando] = useActionState(avisarFamilia, null);
+  const [res, accion, enviando] = useFormulario(avisarFamilia, null);
   if (res?.ok) return <div className="mt-3"><Aviso tono="exito">{res.mensaje}</Aviso></div>;
   return (
     <details className="mt-3 rounded-base border border-borde p-3">
@@ -53,7 +54,7 @@ export function AvisoFamilia({ alerta, responsables, asunto, cuerpo }: {
       {responsables.length === 0 ? (
         <p className="text-sm text-suave">El estudiante no tiene responsables académicos verificados. Si es mayor de edad, escribile desde Mensajes.</p>
       ) : (
-        <form action={accion} className="mt-2 space-y-3">
+        <form {...accion} className="mt-2 space-y-3">
           <input type="hidden" name="alerta" value={alerta} />
           <fieldset>
             <legend className="text-sm font-medium">Para</legend>

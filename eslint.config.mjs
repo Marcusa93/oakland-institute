@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Código de terceros ya minificado (lo copia `pnpm vendor:pdf`).
+    "public/vendor/**",
   ]),
 ]);
 

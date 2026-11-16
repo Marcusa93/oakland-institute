@@ -108,12 +108,14 @@ else
   exit 1
 fi
 
-# 5. Tarea diaria (09:00 de Tucumán = 12:00 UTC): revisión de alertas
+# 5. Tareas programadas (09:00 de Tucumán = 12:00 UTC): alertas, cuotas del mes, avisos y copias
 cat > /etc/cron.d/$APP <<CRON
-# Oakland Institute: revisión diaria de alertas (lee CRON_SECRET del archivo de variables)
+# Oakland Institute: tarea diaria, alertas y cuotas del mes (lee CRON_SECRET del archivo de variables)
 0 12 * * * $APP . /etc/$APP/app.env && curl -fsS -m 60 -H "Authorization: Bearer \$CRON_SECRET" http://127.0.0.1:$PUERTO/api/tareas/diaria >/dev/null
 # Notificaciones al celular pendientes (reintentos): cada minuto
 * * * * * $APP . /etc/$APP/app.env && curl -fsS -m 50 -H "Authorization: Bearer \$CRON_SECRET" http://127.0.0.1:$PUERTO/api/tareas/push >/dev/null
+# Copia de seguridad de la base (03:30 de Tucumán = 06:30 UTC), si está configurada (docs/07-lanzamiento.md)
+30 6 * * * root [ -f /etc/$APP/copia.env ] && sh $DIR/scripts/vps/copia-seguridad.sh >> /var/log/$APP-copias.log 2>&1
 CRON
 chmod 644 /etc/cron.d/$APP
 

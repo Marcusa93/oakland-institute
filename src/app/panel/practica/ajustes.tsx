@@ -1,15 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
 import { Aviso, Boton, Campo } from "@/componentes/ui";
 import { configurarPractica } from "./acciones";
+import { useFormulario } from "@/componentes/usar-formulario";
 
 const METAS = [50, 100, 150, 250, 400];
 
 export function Ajustes({ alias, mostrar, meta }: { alias: string | null; mostrar: boolean; meta: number }) {
-  const [estado, accion, guardando] = useActionState(configurarPractica, null);
+  const [estado, accion, guardando] = useFormulario(configurarPractica, null);
   return (
-    <form action={accion} className="grid gap-4">
+    <form {...accion} className="grid gap-4">
       <Campo id="alias" name="alias" etiqueta="Alias para el ranking" defaultValue={alias ?? ""} maxLength={20}
         placeholder="Ej.: Lucía_M" ayuda="Opcional. Si lo dejás vacío, aparece tu nombre y la inicial del apellido." />
       <fieldset>

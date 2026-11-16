@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Resultado } from "@/app/panel/acciones";
 import { Aviso, Boton, Campo } from "@/componentes/ui";
-import { abrirClase, guardarAsistencia } from "./acciones";
+import { abrirClase, cancelarClase, guardarAsistencia } from "./acciones";
 import { ESTADOS_ASISTENCIA, type EstadoAsistencia } from "./util";
 
 const SIN_CONEXION = "No pudimos conectar con el servidor. Lo que cargaste sigue en pantalla: revisá tu conexión y volvé a tocar el botón.";
@@ -46,6 +46,114 @@ export function AbrirClase({ comisionId, horarioHoy }: { comisionId: string; hor
       )}
       <Boton type="submit" disabled={abriendo} className="w-full sm:w-auto">{abriendo ? "Abriendo…" : "Abrir clase de hoy"}</Boton>
       {error ? <Aviso tono="peligro">{error}</Aviso> : null}
+    </form>
+  );
+}
+
+/** Una clase de un día anterior que quedó sin cargar: tomar asistencia o registrar que no se dictó. */
+export function ClasePendiente({ comisionId, fecha, etiqueta, inicio, fin }: { comisionId: string; fecha: string; etiqueta: string; inicio: string; fin: string }) {
+  const router = useRouter();
+  const [motivo, setMotivo] = useState("");
+  const [cancelando, setCancelando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ocupado, iniciar] = useTransition();
+
+  function tomar() {
+    setError(null);
+    iniciar(async () => {
+      try {
+        const r = await abrirClase({ comision: comisionId, fecha, hora_inicio: inicio, hora_fin: fin });
+        if (r.ok && r.claseId) router.push(`/panel/mis-comisiones/${comisionId}?clase=${r.claseId}`);
+        else setError(r.mensaje);
+      } catch { setError(SIN_CONEXION); }
+    });
+  }
+  function noHubo(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    iniciar(async () => {
+      try {
+        const r = await cancelarClase({ comision: comisionId, clase: "", fecha, hora_inicio: inicio, hora_fin: fin, motivo });
+        if (r.ok) router.refresh(); else setError(r.mensaje);
+      } catch { setError(SIN_CONEXION); }
+    });
+  }
+
+  return (
+    <li className="py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="font-semibold">{etiqueta} · {inicio} a {fin}</p>
+        <div className="flex flex-wrap gap-2">
+          <Boton type="button" onClick={tomar} disabled={ocupado}>{ocupado && !cancelando ? "Abriendo…" : "Tomar asistencia"}</Boton>
+          <Boton type="button" variante="secundario" onClick={() => setCancelando((v) => !v)} aria-expanded={cancelando}>No hubo clase</Boton>
+        </div>
+      </div>
+      {cancelando ? (
+        <form onSubmit={noHubo} className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+          <Campo id={`motivo-${fecha}-${inicio}`} etiqueta="Motivo" required minLength={3} maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Feriado, docente con licencia…" />
+          <Boton type="submit" variante="secundario" disabled={ocupado}>{ocupado ? "Guardando…" : "Registrar"}</Boton>
+        </form>
+      ) : null}
+      {error ? <div className="mt-2"><Aviso tono="peligro">{error}</Aviso></div> : null}
+    </li>
+  );
+}
+
+/** Cargar la asistencia de cualquier día anterior (por ejemplo, si no hubo señal ese día). */
+export function OtraFecha({ comisionId, desde, hasta }: { comisionId: string; desde: string; hasta: string }) {
+  const router = useRouter();
+  const [fecha, setFecha] = useState("");
+  const [inicio, setInicio] = useState("");
+  const [fin, setFin] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [abriendo, iniciar] = useTransition();
+
+  function enviar(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    iniciar(async () => {
+      try {
+        const r = await abrirClase({ comision: comisionId, fecha, hora_inicio: inicio, hora_fin: fin });
+        if (r.ok && r.claseId) router.push(`/panel/mis-comisiones/${comisionId}?clase=${r.claseId}`);
+        else setError(r.mensaje);
+      } catch { setError(SIN_CONEXION); }
+    });
+  }
+
+  return (
+    <form onSubmit={enviar} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+      <Campo id="otra-fecha" type="date" etiqueta="Día de la clase" required min={desde} max={hasta} value={fecha} onChange={(e) => setFecha(e.target.value)} />
+      <Campo id="otra-inicio" type="time" etiqueta="Inicio (si no es el habitual)" value={inicio} onChange={(e) => setInicio(e.target.value)} />
+      <Campo id="otra-fin" type="time" etiqueta="Fin" value={fin} onChange={(e) => setFin(e.target.value)} required={Boolean(inicio)} />
+      <Boton type="submit" disabled={abriendo}>{abriendo ? "Abriendo…" : "Abrir esa clase"}</Boton>
+      {error ? <div className="sm:col-span-4"><Aviso tono="peligro">{error}</Aviso></div> : null}
+    </form>
+  );
+}
+
+/** Marcar como cancelada una clase sin asistencia. */
+export function CancelarClase({ comisionId, claseId }: { comisionId: string; claseId: string }) {
+  const router = useRouter();
+  const [motivo, setMotivo] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [guardando, iniciar] = useTransition();
+
+  function enviar(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    iniciar(async () => {
+      try {
+        const r = await cancelarClase({ comision: comisionId, clase: claseId, fecha: "", hora_inicio: "", hora_fin: "", motivo });
+        if (r.ok) router.push(`/panel/mis-comisiones/${comisionId}`); else setError(r.mensaje);
+      } catch { setError(SIN_CONEXION); }
+    });
+  }
+
+  return (
+    <form onSubmit={enviar} className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+      <Campo id="cancelar-motivo" etiqueta="Motivo" required minLength={3} maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Feriado, docente con licencia…" />
+      <Boton type="submit" variante="secundario" disabled={guardando}>{guardando ? "Guardando…" : "No hubo clase"}</Boton>
+      {error ? <div className="sm:col-span-2"><Aviso tono="peligro">{error}</Aviso></div> : null}
     </form>
   );
 }

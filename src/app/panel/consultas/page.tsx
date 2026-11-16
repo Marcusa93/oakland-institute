@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- filas sin tipar hasta generar los tipos de la base (backlog 1.18) */
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Aviso, EstadoVacio, Insignia, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
+import { Aviso, Descarga, EstadoVacio, Insignia, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
 import { fecha, fechaHora, hoyISO } from "@/lib/formato";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
@@ -72,7 +72,8 @@ export default async function Consultas({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <Titulo descripcion="Cada consulta tiene un responsable, una próxima acción y su historial. «Para hoy» junta lo que no puede esperar.">
+      <Titulo descripcion="Cada consulta tiene un responsable, una próxima acción y su historial. «Para hoy» junta lo que no puede esperar."
+        acciones={<Descarga href="/panel/consultas/exportar">Todas para Excel</Descarga>}>
         Consultas
       </Titulo>
 

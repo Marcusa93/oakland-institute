@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import type { Resultado } from "@/app/panel/acciones";
 import { Aviso, Boton, Campo, Selector } from "@/componentes/ui";
 import { fecha, pesos } from "@/lib/formato";
+import { useFormulario } from "@/componentes/usar-formulario";
 import {
   anularObligacion, crearObligacion, generarCuotas, imputarSaldo, registrarCobro, registrarDevolucion, reversarPago, validarPago,
 } from "./acciones";
@@ -18,9 +19,9 @@ const etiquetaObligacion = (o: OpcionObligacion) => `${o.descripcion} · ${o.est
 
 /** Bandeja: confirmar o rechazar una transferencia informada. */
 export function ValidarPago({ pagoId }: { pagoId: string }) {
-  const [estado, accion, guardando] = useActionState(validarPago, null);
+  const [estado, accion, guardando] = useFormulario(validarPago, null);
   return (
-    <form action={accion} className="mt-3 grid gap-3 border-t border-borde pt-3 sm:grid-cols-[1fr_auto] sm:items-end">
+    <form {...accion} className="mt-3 grid gap-3 border-t border-borde pt-3 sm:grid-cols-[1fr_auto] sm:items-end">
       <input type="hidden" name="pago" value={pagoId} />
       <Campo id={`motivo-${pagoId}`} name="motivo" etiqueta="Motivo del rechazo" ayuda="Obligatorio solo si rechazás. La familia lo va a ver." maxLength={300} />
       <div className="flex flex-wrap gap-2">
@@ -37,11 +38,11 @@ export function ValidarPago({ pagoId }: { pagoId: string }) {
 
 /** Alta de un cobro en efectivo o transferencia, con imputación a una o varias obligaciones. */
 export function RegistrarCobro({ personaId, hoy, obligaciones }: { personaId: string; hoy: string; obligaciones: OpcionObligacion[] }) {
-  const [estado, accion, guardando] = useActionState(registrarCobro, null);
+  const [estado, accion, guardando] = useFormulario(registrarCobro, null);
   const [medio, setMedio] = useState<"efectivo" | "transferencia">("efectivo");
   const [verificada, setVerificada] = useState(true);
   return (
-    <form action={accion} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <form {...accion} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <input type="hidden" name="persona" value={personaId} />
       <Selector id="cobro-medio" name="medio" etiqueta="Medio de pago" value={medio}
         onChange={(e) => { const m = e.target.value === "transferencia" ? "transferencia" : "efectivo"; setMedio(m); setVerificada(m === "efectivo"); }}>
@@ -103,9 +104,9 @@ export function RegistrarCobro({ personaId, hoy, obligaciones }: { personaId: st
 
 /** Operaciones sobre un pago confirmado: imputar su saldo a favor, devolverlo o reversar el pago. */
 export function AccionesPago({ pagoId, saldoAFavor, obligaciones }: { pagoId: string; saldoAFavor: number; obligaciones: OpcionObligacion[] }) {
-  const [imputado, imputar, imputando] = useActionState(imputarSaldo, null);
-  const [devuelto, devolver, devolviendo] = useActionState(registrarDevolucion, null);
-  const [reversado, reversar, reversando] = useActionState(reversarPago, null);
+  const [imputado, imputar, imputando] = useFormulario(imputarSaldo, null);
+  const [devuelto, devolver, devolviendo] = useFormulario(registrarDevolucion, null);
+  const [reversado, reversar, reversando] = useFormulario(reversarPago, null);
   const resumen = "cursor-pointer text-sm font-semibold text-marca";
   return (
     <div className="space-y-2">
@@ -113,7 +114,7 @@ export function AccionesPago({ pagoId, saldoAFavor, obligaciones }: { pagoId: st
         <details>
           <summary className={resumen}>Imputar saldo a favor</summary>
           {obligaciones.length === 0 ? <p className="mt-2 text-sm text-suave">No hay obligaciones con saldo para imputar.</p> : (
-            <form action={imputar} className="mt-2 grid gap-2">
+            <form {...imputar} className="mt-2 grid gap-2">
               <input type="hidden" name="pago" value={pagoId} />
               <Selector id={`imp-obl-${pagoId}`} name="obligacion" etiqueta="Obligación" required defaultValue="">
                 <option value="" disabled>Elegí una obligación</option>
@@ -130,7 +131,7 @@ export function AccionesPago({ pagoId, saldoAFavor, obligaciones }: { pagoId: st
       {saldoAFavor > 0 ? (
         <details>
           <summary className={resumen}>Registrar devolución</summary>
-          <form action={devolver} className="mt-2 grid gap-2">
+          <form {...devolver} className="mt-2 grid gap-2">
             <input type="hidden" name="pago" value={pagoId} />
             <Campo id={`dev-importe-${pagoId}`} name="importe" etiqueta="Importe devuelto" inputMode="decimal" required autoComplete="off"
               ayuda={`Se puede devolver hasta ${pesos(saldoAFavor)} (el saldo a favor).`} />
@@ -142,7 +143,7 @@ export function AccionesPago({ pagoId, saldoAFavor, obligaciones }: { pagoId: st
       ) : null}
       <details>
         <summary className={resumen}>Reversar</summary>
-        <form action={reversar} className="mt-2 grid gap-2">
+        <form {...reversar} className="mt-2 grid gap-2">
           <input type="hidden" name="pago" value={pagoId} />
           <p className="text-xs text-suave">
             Un pago confirmado no se edita ni se borra. Al reversarlo queda en el historial con el motivo, se anulan sus imputaciones y las obligaciones recuperan su saldo.
@@ -157,9 +158,9 @@ export function AccionesPago({ pagoId, saldoAFavor, obligaciones }: { pagoId: st
 }
 
 export function GenerarCuotas({ mes }: { mes: string }) {
-  const [estado, accion, generando] = useActionState(generarCuotas, null);
+  const [estado, accion, generando] = useFormulario(generarCuotas, null);
   return (
-    <form action={accion} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+    <form {...accion} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
       <Campo id="cuotas-periodo" name="periodo" type="month" etiqueta="Mes de la cuota" defaultValue={mes} required />
       <Campo id="cuotas-dia" name="dia" type="number" min={1} max={28} etiqueta="Día de vencimiento" defaultValue={10} required />
       <Boton type="submit" disabled={generando}>{generando ? "Generando…" : "Generar cuotas"}</Boton>
@@ -173,9 +174,9 @@ export function NuevaObligacion({ personaId, hoy, estudiantes, conceptos }: {
   estudiantes: Array<{ id: string; nombre: string }>;
   conceptos: Array<{ id: string; nombre: string }>;
 }) {
-  const [estado, accion, guardando] = useActionState(crearObligacion, null);
+  const [estado, accion, guardando] = useFormulario(crearObligacion, null);
   return (
-    <form action={accion} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <form {...accion} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <input type="hidden" name="persona" value={personaId} />
       <Selector id="obl-estudiante" name="estudiante" etiqueta="Estudiante" required defaultValue={estudiantes.length === 1 ? estudiantes[0].id : ""}>
         <option value="" disabled>Elegí un estudiante</option>
@@ -195,11 +196,11 @@ export function NuevaObligacion({ personaId, hoy, estudiantes, conceptos }: {
 }
 
 export function AnularObligacion({ obligaciones }: { obligaciones: OpcionObligacion[] }) {
-  const [estado, accion, guardando] = useActionState(anularObligacion, null);
+  const [estado, accion, guardando] = useFormulario(anularObligacion, null);
   const anulables = obligaciones.filter((o) => o.estado === "pendiente");
   if (anulables.length === 0) return <p className="text-sm text-suave">No hay obligaciones sin pagos para anular.</p>;
   return (
-    <form action={accion} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+    <form {...accion} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
       <Selector id="anular-obligacion" name="obligacion" etiqueta="Obligación" required defaultValue="">
         <option value="" disabled>Elegí una obligación</option>
         {anulables.map((o) => <option key={o.id} value={o.id}>{etiquetaObligacion(o)}</option>)}

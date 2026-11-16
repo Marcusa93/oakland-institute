@@ -54,7 +54,8 @@ export default async function Comisiones({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <Titulo descripcion="Grupos de cada ciclo, con sus horarios, docentes y lugares ocupados (inscriptos más reservas vigentes).">Comisiones</Titulo>
+      <Titulo descripcion="Grupos de cada ciclo, con sus horarios, docentes y lugares ocupados (inscriptos más reservas vigentes)."
+        acciones={<Enlace href="/panel/oferta" variante="secundario">Ciclos, cursos, niveles y aulas</Enlace>}>Comisiones</Titulo>
 
       {errorCatalogos ? <Aviso tono="peligro">No pudimos cargar los datos. Actualizá la página.</Aviso> : null}
       {ciclos.length > 1 ? (
@@ -126,7 +127,7 @@ export default async function Comisiones({ searchParams }: { searchParams: Promi
       <Tarjeta className="mt-6">
         <h2 className="text-lg font-bold">Nueva comisión</h2>
         {faltantes.length > 0 ? (
-          <div className="mt-2"><Aviso tono="alerta">Para crear una comisión primero tiene que existir {faltantes.join(", ")}. Pedile a dirección que lo cargue.</Aviso></div>
+          <div className="mt-2"><Aviso tono="alerta">Para crear una comisión primero tiene que existir {faltantes.join(", ")}. Cargalo en <Link href="/panel/oferta" className="font-semibold underline">Oferta académica</Link>.</Aviso></div>
         ) : (
           <div className="mt-3">
             <Formulario accion={crearComision} boton="Crear comisión" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

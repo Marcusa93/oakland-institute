@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- no hay tipos generados de la base: filas tipadas a mano */
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Aviso, Boton, Campo, Enlace, EstadoVacio, Insignia, Tabla, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
+import { Aviso, Boton, Campo, Descarga, Enlace, EstadoVacio, Insignia, Tabla, Tarjeta, Titulo, type Tono } from "@/componentes/ui";
 import { fecha, fechaHora, hoyISO, pesos } from "@/lib/formato";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
@@ -122,14 +122,20 @@ export default async function Cobros({ searchParams }: { searchParams: Promise<{
         <h2 id="t-cuotas" className={h2}>Generar cuotas del mes</h2>
         <Tarjeta>
           <p className="mb-3 max-w-2xl text-sm text-suave">
-            Crea la cuota del mes para cada inscripción activa, con el arancel vigente y los beneficios aprobados. Se puede repetir sin riesgo: si la cuota de ese mes ya existe, no se duplica.
+            Las cuotas se generan solas el primer día de cada mes, con el arancel vigente y las becas o descuentos aprobados. Este botón sirve para generarlas antes o para un mes puntual. Se puede repetir sin riesgo: si la cuota de ese mes ya existe, no se duplica.
           </p>
           <GenerarCuotas mes={hoy.slice(0, 7)} />
         </Tarjeta>
       </section>
 
       <section aria-labelledby="t-vencidas">
-        <h2 id="t-vencidas" className={h2}>Obligaciones vencidas</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="t-vencidas" className={h2}>Obligaciones vencidas</h2>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Descarga href="/panel/cobros/exportar?vencidas=1">Vencidas para Excel</Descarga>
+            <Descarga href="/panel/cobros/exportar">Todos los saldos para Excel</Descarga>
+          </div>
+        </div>
         {vencidas.error ? <Aviso tono="peligro">No pudimos cargar las obligaciones vencidas. Actualizá la página.</Aviso> : null}
         {!vencidas.error && vencidas.filas.length === 0 ? (
           <EstadoVacio titulo="No hay obligaciones vencidas">Todo lo que venció hasta hoy está pagado.</EstadoVacio>
@@ -228,7 +234,12 @@ async function CuentaDePersona({ personaId, hoy }: { personaId: string; hoy: str
                   <td className="whitespace-nowrap">{pesos(s?.imputado ?? 0)}{s && s.devuelto > 0 ? <p className="text-xs text-suave">Devuelto: {pesos(s.devuelto)}</p> : null}</td>
                   <td className="whitespace-nowrap">{pesos(s?.saldo_a_favor ?? 0)}</td>
                   <td className="min-w-56">
-                    {p.estado === "confirmado" ? <AccionesPago pagoId={p.id} saldoAFavor={s?.saldo_a_favor ?? 0} obligaciones={opciones} /> : <span className="text-suave">—</span>}
+                    {p.estado === "confirmado" ? (
+                      <>
+                        <Link href={`/panel/cuenta/recibo/${p.id}`} className="font-semibold text-marca underline-offset-4 hover:underline">Comprobante para imprimir o enviar</Link>
+                        <AccionesPago pagoId={p.id} saldoAFavor={s?.saldo_a_favor ?? 0} obligaciones={opciones} />
+                      </>
+                    ) : <span className="text-suave">—</span>}
                   </td>
                 </tr>
               );

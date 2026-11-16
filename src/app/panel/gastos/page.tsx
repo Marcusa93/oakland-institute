@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- no hay tipos generados de la base: filas tipadas a mano */
 import type { Metadata } from "next";
-import { Aviso, Boton, Campo, EstadoVacio, Insignia, Tabla, Tarjeta, Titulo } from "@/componentes/ui";
+import { Aviso, Boton, Campo, Descarga, EstadoVacio, Insignia, Tabla, Tarjeta, Titulo } from "@/componentes/ui";
 import { fecha, hoyISO, pesos } from "@/lib/formato";
 import { puede } from "@/lib/permisos";
 import { exigirPermiso } from "@/lib/sesion";
@@ -50,10 +50,13 @@ export default async function Gastos({ searchParams }: { searchParams: Promise<{
     <>
       <Titulo descripcion="Lo que el instituto paga: servicios, materiales, mantenimiento. Un gasto cargado no se borra: si hubo un error, se anula con motivo."
         acciones={
-          <form method="get" action="/panel/gastos" className="flex items-end gap-2">
-            <Campo id="filtro-mes" name="mes" type="month" etiqueta="Mes" defaultValue={mes} required />
-            <Boton type="submit" variante="secundario">Ver</Boton>
-          </form>
+          <div className="flex flex-wrap items-end gap-2">
+            <form method="get" action="/panel/gastos" className="flex items-end gap-2">
+              <Campo id="filtro-mes" name="mes" type="month" etiqueta="Mes" defaultValue={mes} required />
+              <Boton type="submit" variante="secundario">Ver</Boton>
+            </form>
+            <Descarga href={`/panel/gastos/exportar?mes=${mes}`}>Mes para Excel</Descarga>
+          </div>
         }>
         Gastos
       </Titulo>

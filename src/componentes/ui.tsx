@@ -116,3 +116,12 @@ export function Tabla({ encabezados, children, leyenda }: { encabezados: string[
     </div>
   );
 }
+
+/** Descarga de una planilla (enlace común: no pasa por el enrutador de Next). */
+export function Descarga({ href, children = "Descargar para Excel" }: { href: string; children?: ReactNode }) {
+  return (
+    <a href={href} download className={`${base} ${variantes.secundario}`}>
+      <span aria-hidden>⬇</span> {children}
+    </a>
+  );
+}

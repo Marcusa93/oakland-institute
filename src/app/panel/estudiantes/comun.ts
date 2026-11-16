@@ -64,13 +64,15 @@ export interface EstudianteListado { id: string; legajo: string; estado: string;
 
 /** Busca estudiantes por apellido, nombre o legajo. Sin texto, lista por apellido. */
 export async function buscarEstudiantes(
-  supabase: Cliente, q: string | undefined, opciones: { estado?: string; limite?: number } = {},
-): Promise<{ filas: EstudianteListado[]; error: boolean }> {
+  supabase: Cliente, q: string | undefined, opciones: { estado?: string; limite?: number; desde?: number } = {},
+): Promise<{ filas: EstudianteListado[]; error: boolean; hayMas: boolean }> {
   const limite = opciones.limite ?? 100;
+  const desde = opciones.desde ?? 0;
   const tokens = palabras(q);
+  // Se pide una fila de más para saber si hay otra página.
   let porNombre = supabase.from("personas")
     .select("id, nombres, apellidos, estudiantes!inner(id, legajo, estado, fecha_alta)")
-    .is("eliminada_en", null).order("apellidos").order("nombres").limit(limite);
+    .is("eliminada_en", null).order("apellidos").order("nombres").order("id").range(desde, desde + limite);
   for (const t of tokens) porNombre = porNombre.or(`apellidos.ilike.%${t}%,nombres.ilike.%${t}%`);
   if (opciones.estado) porNombre = porNombre.eq("estudiantes.estado", opciones.estado);
 
@@ -83,6 +85,8 @@ export async function buscarEstudiantes(
     porLegajo = c;
   }
   const [a, b] = await Promise.all([porNombre, porLegajo]);
+  const hayMas = (a.data ?? []).length > limite;
+  if (a.data) a.data = a.data.slice(0, limite);
   const filas = new Map<string, EstudianteListado>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const e of (b?.data ?? []) as any[]) {
@@ -94,7 +98,7 @@ export async function buscarEstudiantes(
     const e = uno<{ id: string; legajo: string; estado: string; fecha_alta: string }>(p.estudiantes);
     if (e && !filas.has(e.id)) filas.set(e.id, { ...e, persona: { id: p.id, nombres: p.nombres, apellidos: p.apellidos } });
   }
-  return { filas: [...filas.values()], error: Boolean(a.error || b?.error) };
+  return { filas: [...filas.values()], error: Boolean(a.error || b?.error), hayMas };
 }
 
 export const ESTADOS_ESTUDIANTE = [["aspirante", "Aspirante"], ["activo", "Activo"], ["inactivo", "Inactivo"], ["egresado", "Egresado"]] as const;

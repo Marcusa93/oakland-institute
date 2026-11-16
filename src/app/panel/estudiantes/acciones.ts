@@ -83,42 +83,9 @@ async function buscarPorNombre(supabase: Cliente, d: DatosPersona) {
   });
 }
 
-/**
- * No hay borrado físico de personas: deshacer = quitar el documento (para que
- * no bloquee una nueva carga) y marcar la persona como eliminada.
- */
-async function deshacerPersona(supabase: Cliente, personaId: string): Promise<boolean> {
-  const a = await supabase.from("personas_datos").update({ tipo_documento: null, numero_documento: null }).eq("persona_id", personaId);
-  const b = await supabase.from("personas").update({ eliminada_en: new Date().toISOString() }).eq("id", personaId);
-  return !a.error && !b.error;
-}
-
-/** Crea persona + datos. Si falla el segundo paso, deshace el primero. */
-async function crearPersona(supabase: Cliente, d: DatosPersona, documento: string | null): Promise<{ personaId: string } | { mensaje: string }> {
-  const persona = await supabase.from("personas").insert({ nombres: d.nombres, apellidos: d.apellidos }).select("id").single();
-  if (persona.error || !persona.data) return { mensaje: `No se cargó nada. ${traducir(persona.error)}` };
-  const personaId = persona.data.id as string;
-  const datos = await supabase.from("personas_datos").insert({
-    persona_id: personaId,
-    tipo_documento: documento ? d.tipo_documento : null,
-    numero_documento: documento,
-    fecha_nacimiento: d.fecha_nacimiento || null,
-    email: d.email ? d.email.toLowerCase() : null,
-    telefono: d.telefono || null,
-  });
-  if (datos.error) {
-    const deshecho = await deshacerPersona(supabase, personaId);
-    return {
-      mensaje: deshecho
-        ? `No se cargó nada: falló el guardado de los datos personales y deshicimos el alta. ${traducir(datos.error)}`
-        : `Quedó cargada la persona ${d.apellidos}, ${d.nombres} sin sus datos personales y no pudimos deshacerlo. Avisá a dirección antes de volver a intentar.`,
-    };
-  }
-  return { personaId };
-}
-
 // ---------------------------------------------------------------------------
-// Alta de estudiante: persona → personas_datos → estudiante
+// Alta de estudiante: persona, datos y legajo en una sola operación de la base
+// (si algo falla no queda nada a medio cargar)
 // ---------------------------------------------------------------------------
 export async function crearEstudiante(_previo: ResultadoAlta | null, formData: FormData): Promise<ResultadoAlta> {
   await exigirPermiso("estudiantes", "crear");
@@ -128,10 +95,11 @@ export async function crearEstudiante(_previo: ResultadoAlta | null, formData: F
   // Camino corto: la persona ya existe (se encontró por documento) y solo falta el legajo.
   const usar = uuid.safeParse(texto(formData, "usar_persona"));
   if (usar.success) {
-    const alta = await supabase.from("estudiantes").insert({ persona_id: usar.data }).select("id, legajo").single();
+    const alta = await supabase.rpc("alta_estudiante", { p_nombres: null, p_apellidos: null, p_persona: usar.data });
     if (alta.error || !alta.data) return { ok: false, mensaje: traducir(alta.error), valores };
+    const r = alta.data as { estudiante_id: string; legajo: string };
     revalidatePath("/panel/estudiantes");
-    return { ok: true, mensaje: `Listo: legajo ${alta.data.legajo}.`, estudianteId: alta.data.id };
+    return { ok: true, mensaje: `Listo: legajo ${r.legajo}.`, estudianteId: r.estudiante_id };
   }
 
   const r = esquemaPersona.safeParse(valores);
@@ -159,21 +127,15 @@ export async function crearEstudiante(_previo: ResultadoAlta | null, formData: F
     }
   }
 
-  const persona = await crearPersona(supabase, d, v.documento);
-  if ("mensaje" in persona) return { ok: false, mensaje: persona.mensaje, valores };
-
-  const alta = await supabase.from("estudiantes").insert({ persona_id: persona.personaId }).select("id, legajo").single();
-  if (alta.error || !alta.data) {
-    const deshecho = await deshacerPersona(supabase, persona.personaId);
-    return {
-      ok: false, valores,
-      mensaje: deshecho
-        ? `No se cargó nada: no pudimos generar el legajo y deshicimos el alta de la persona. ${traducir(alta.error)}`
-        : `Quedó cargada la persona ${d.apellidos}, ${d.nombres} pero sin legajo de estudiante, y no pudimos deshacerlo. Avisá a dirección antes de volver a intentar.`,
-    };
-  }
+  const alta = await supabase.rpc("alta_estudiante", {
+    p_nombres: d.nombres, p_apellidos: d.apellidos,
+    p_tipo_documento: v.documento ? d.tipo_documento : null, p_numero_documento: v.documento,
+    p_fecha_nacimiento: d.fecha_nacimiento || null, p_email: d.email || null, p_telefono: d.telefono || null, p_persona: null,
+  });
+  if (alta.error || !alta.data) return { ok: false, mensaje: `No se cargó nada. ${traducir(alta.error)}`, valores };
+  const nuevo = alta.data as { estudiante_id: string; legajo: string };
   revalidatePath("/panel/estudiantes");
-  return { ok: true, mensaje: `Estudiante creado con legajo ${alta.data.legajo}.`, estudianteId: alta.data.id };
+  return { ok: true, mensaje: `Estudiante creado con legajo ${nuevo.legajo}.`, estudianteId: nuevo.estudiante_id };
 }
 
 // ---------------------------------------------------------------------------
@@ -307,20 +269,12 @@ export async function crearResponsableEInvitar(_previo: ResultadoAlta | null, fo
     }
   }
 
-  const persona = await crearPersona(supabase, d, v.documento);
-  if ("mensaje" in persona) return { ok: false, mensaje: persona.mensaje, valores };
-  const { error } = await supabase.rpc("invitar_responsable", {
-    p_estudiante: estudiante.data, p_responsable: persona.personaId, p_parentesco: parentesco || null,
+  const { error } = await supabase.rpc("alta_responsable", {
+    p_estudiante: estudiante.data, p_nombres: d.nombres, p_apellidos: d.apellidos,
+    p_tipo_documento: v.documento ? d.tipo_documento : null, p_numero_documento: v.documento,
+    p_email: d.email || null, p_telefono: d.telefono || null, p_parentesco: parentesco || null,
   });
-  if (error) {
-    const deshecho = await deshacerPersona(supabase, persona.personaId);
-    return {
-      ok: false, valores,
-      mensaje: deshecho
-        ? `No se cargó nada: no pudimos crear el vínculo y deshicimos el alta de la persona. ${traducir(error)}`
-        : `La persona ${d.apellidos}, ${d.nombres} quedó cargada pero sin vínculo con el estudiante. Buscala en "Persona ya cargada" para invitarla.`,
-    };
-  }
+  if (error) return { ok: false, valores, mensaje: `No se cargó nada. ${traducir(error)}` };
   revalidatePath(ruta(estudiante.data));
   return { ok: true, mensaje: "Persona creada y agregada como responsable. El vínculo queda pendiente hasta que lo verifiques." };
 }

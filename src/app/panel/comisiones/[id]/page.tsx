@@ -9,7 +9,7 @@ import { buscarEstudiantes, esUuid, uno, type PersonaBasica } from "../../estudi
 import { Formulario } from "../../estudiantes/formulario";
 import {
   actualizarComision, agregarAEspera, agregarHorario, asignarDocente, cambiarDeComision, darDeBaja, inscribir,
-  quitarDocente, quitarHorario, reservar, retirarDeEspera,
+  cancelarReserva, quitarDocente, quitarHorario, reservar, retirarDeEspera,
 } from "../acciones";
 import { CamposHorario, ESTADOS_COMISION, estadoComision, ordenarHorarios, textoHorario } from "../comun";
 
@@ -96,7 +96,12 @@ export default async function Comision({ params, searchParams }: {
     <>
       <Titulo
         descripcion={[uno<Nombre>(k.cursos as unknown as Nombre)?.nombre, uno<Nombre>(k.niveles as unknown as Nombre)?.nombre, uno<Nombre>(k.ciclos_lectivos as unknown as Nombre)?.nombre, uno<Nombre>(k.sedes as unknown as Nombre)?.nombre].filter(Boolean).join(" · ")}
-        acciones={<Enlace href={`/panel/comisiones?ciclo=${k.ciclo_id}`} variante="secundario">Volver a comisiones</Enlace>}>
+        acciones={
+          <div className="flex flex-wrap gap-2">
+            <Enlace href={`/panel/mis-comisiones/${id}`} variante="secundario">Clases y asistencia</Enlace>
+            <Enlace href={`/panel/comisiones?ciclo=${k.ciclo_id}`} variante="secundario">Volver a comisiones</Enlace>
+          </div>
+        }>
         {k.nombre}
       </Titulo>
 
@@ -315,7 +320,16 @@ export default async function Comision({ params, searchParams }: {
                 <td><Link href={`/panel/estudiantes/${r.estudiante_id}`} className="font-semibold text-marca underline-offset-4 hover:underline">{nombreCompleto(personaDe(r))}</Link><p className="text-suave">{legajoDe(r)}</p></td>
                 <td>{fechaHora(r.creada_en)}</td>
                 <td>{fechaHora(r.vence_en)} {vencida ? <Insignia tono="neutro">Vencida: ya no ocupa lugar</Insignia> : null}</td>
-                <td>{!vencida && !inscriptosIds.has(r.estudiante_id) ? <Link className="font-semibold text-marca underline" href={`/panel/comisiones/${id}?eq=${encodeURIComponent(legajoDe(r))}`}>Inscribir</Link> : null}</td>
+                <td className="space-y-2">
+                  {!vencida && !inscriptosIds.has(r.estudiante_id) ? <p><Link className="font-semibold text-marca underline" href={`/panel/comisiones/${id}?eq=${encodeURIComponent(legajoDe(r))}`}>Inscribir</Link></p> : null}
+                  {!vencida ? (
+                    <Formulario accion={cancelarReserva} boton="Cancelar reserva" enviando="Cancelando…" variante="secundario" className="grid gap-2"
+                      confirmar={`¿Cancelar la reserva de ${nombreCompleto(personaDe(r))}? El lugar queda libre para otra persona.`}>
+                      <input type="hidden" name="comision" value={id} />
+                      <input type="hidden" name="id" value={r.id} />
+                    </Formulario>
+                  ) : null}
+                </td>
               </tr>
             );
           })}

@@ -5,17 +5,25 @@ import { fecha, fechaHora, hoyISO } from "@/lib/formato";
 import { esGestion } from "@/lib/permisos";
 import { exigirPermiso } from "@/lib/sesion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
-import { AbrirClase, TomaAsistencia, type FilaAsistencia } from "../asistencia";
-import { diaISO, hora, horariosVigentes, textoHorario, UUID, type EstadoAsistencia, type Horario } from "../util";
+import { AbrirClase, CancelarClase, ClasePendiente, OtraFecha, TomaAsistencia, type FilaAsistencia } from "../asistencia";
+import { diaISO, enVigencia, hora, horariosVigentes, textoHorario, UUID, type EstadoAsistencia, type Horario } from "../util";
 
 export const metadata: Metadata = { title: "Clases y asistencia" };
 
 interface Comision {
-  id: string; nombre: string; estado: string;
+  id: string; nombre: string; estado: string; fecha_inicio: string; fecha_fin: string;
   cursos: { nombre: string } | null; niveles: { nombre: string } | null;
   comision_horarios: Horario[];
 }
-interface Clase { id: string; fecha: string; hora_inicio: string; hora_fin: string; estado: string; tema: string | null; asistencias?: { count: number }[] }
+interface Clase { id: string; fecha: string; hora_inicio: string; hora_fin: string; estado: string; tema: string | null; motivo_cancelacion?: string | null; asistencias?: { count: number }[] }
+
+/** "2027-03-10" + n días (fechas de negocio, sin husos horarios). */
+function sumarDias(fecha: string, n: number) {
+  const d = new Date(`${fecha}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+const DIAS_PENDIENTES = 21;
 
 const ESTADO_CLASE: Record<string, [string, Tono]> = {
   programada: ["Sin asistencia", "alerta"], dictada: ["Dictada", "exito"], cancelada: ["Cancelada", "neutro"],
@@ -33,7 +41,7 @@ export default async function ComisionDocente({ params, searchParams }: {
 
   const [comisionR, asignacion] = await Promise.all([
     supabase.from("comisiones")
-      .select("id, nombre, estado, cursos(nombre), niveles(nombre), comision_horarios(dia_semana, hora_inicio, hora_fin, vigencia, aulas(nombre))")
+      .select("id, nombre, estado, fecha_inicio, fecha_fin, cursos(nombre), niveles(nombre), comision_horarios(dia_semana, hora_inicio, hora_fin, vigencia, aulas(nombre))")
       .eq("id", id).maybeSingle(),
     supabase.from("comision_docentes").select("id", { count: "exact", head: true })
       .eq("comision_id", id).eq("docente_persona_id", sesion.personaId).is("hasta", null),
@@ -55,7 +63,7 @@ export default async function ComisionDocente({ params, searchParams }: {
   if (claseId) {
     // Solo nombre del estudiante: sin contactos, responsables ni datos económicos.
     const [claseR, matriculasR, asistenciasR] = await Promise.all([
-      supabase.from("clases").select("id, fecha, hora_inicio, hora_fin, estado, tema").eq("id", claseId).eq("comision_id", id).maybeSingle(),
+      supabase.from("clases").select("id, fecha, hora_inicio, hora_fin, estado, tema, motivo_cancelacion").eq("id", claseId).eq("comision_id", id).maybeSingle(),
       supabase.from("matriculas").select("id, estudiantes(personas(nombres, apellidos))").eq("comision_id", id).eq("estado", "activa"),
       supabase.from("asistencias").select("matricula_id, estado, observacion, registrada_en").eq("clase_id", claseId),
     ]);
@@ -99,7 +107,12 @@ export default async function ComisionDocente({ params, searchParams }: {
               </div>
             ) : null}
             {clase.estado === "cancelada" ? (
-              <div className="mb-4"><Aviso tono="alerta">La clase figura como cancelada. Si guardás asistencia, pasa a figurar como dictada.</Aviso></div>
+              <div className="mb-4"><Aviso tono="alerta">La clase figura como cancelada{clase.motivo_cancelacion ? ` (${clase.motivo_cancelacion})` : ""}. Si guardás asistencia, pasa a figurar como dictada.</Aviso></div>
+            ) : cargadas === 0 ? (
+              <details className="mb-4">
+                <summary className="cursor-pointer text-sm font-semibold text-marca">¿No hubo clase ese día?</summary>
+                <div className="mt-2 max-w-xl"><CancelarClase comisionId={id} claseId={clase.id} /></div>
+              </details>
             ) : null}
             {filas.length === 0 ? (
               <EstadoVacio titulo="Esta comisión no tiene estudiantes inscriptos">Cuando administración confirme inscripciones, van a aparecer en este listado.</EstadoVacio>
@@ -113,10 +126,28 @@ export default async function ComisionDocente({ params, searchParams }: {
   }
 
   // ------------------------------------------------------------------ Clases de la comisión
-  const { data: clasesData, error: errorClases } = await supabase.from("clases")
-    .select("id, fecha, hora_inicio, hora_fin, estado, tema, asistencias(count)")
-    .eq("comision_id", id).lte("fecha", hoy).order("fecha", { ascending: false }).order("hora_inicio", { ascending: false }).limit(20);
+  const ayer = sumarDias(hoy, -1);
+  const desdePendientes = [sumarDias(hoy, -DIAS_PENDIENTES), comision.fecha_inicio].sort().at(-1)!;
+  const [{ data: clasesData, error: errorClases }, recientes] = await Promise.all([
+    supabase.from("clases")
+      .select("id, fecha, hora_inicio, hora_fin, estado, tema, motivo_cancelacion, asistencias(count)")
+      .eq("comision_id", id).lte("fecha", hoy).order("fecha", { ascending: false }).order("hora_inicio", { ascending: false }).limit(20),
+    supabase.from("clases").select("fecha, hora_inicio").eq("comision_id", id).gte("fecha", desdePendientes).lte("fecha", ayer),
+  ]);
   const clases = (clasesData ?? []) as unknown as Clase[];
+  // Días con horario de las últimas semanas que todavía no tienen clase cargada.
+  const yaCargadas = new Set(((recientes.data ?? []) as { fecha: string; hora_inicio: string }[]).map((c) => `${c.fecha} ${hora(c.hora_inicio)}`));
+  const pendientes: Array<{ fecha: string; inicio: string; fin: string }> = [];
+  if (comision.estado !== "cancelada" && !recientes.error) {
+    for (let f = desdePendientes; f <= ayer && f <= comision.fecha_fin; f = sumarDias(f, 1)) {
+      for (const h of comision.comision_horarios ?? []) {
+        if (h.dia_semana === diaISO(f) && enVigencia(h.vigencia, f) && !yaCargadas.has(`${f} ${hora(h.hora_inicio)}`)) {
+          pendientes.push({ fecha: f, inicio: hora(h.hora_inicio), fin: hora(h.hora_fin) });
+        }
+      }
+    }
+    pendientes.sort((a, b) => b.fecha.localeCompare(a.fecha) || a.inicio.localeCompare(b.inicio));
+  }
   const deHoy = clases.filter((c) => c.fecha === hoy);
   const anteriores = clases.filter((c) => c.fecha !== hoy);
   const horarios = horariosVigentes(comision.comision_horarios, hoy);
@@ -131,7 +162,7 @@ export default async function ComisionDocente({ params, searchParams }: {
       <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
         <div>
           <p className="font-semibold">{fecha(c.fecha)} · {hora(c.hora_inicio)} a {hora(c.hora_fin)}</p>
-          <p className="text-sm text-suave">{c.tema || "Sin tema cargado"} · {n > 0 ? `${n} con asistencia` : "asistencia sin cargar"}</p>
+          <p className="text-sm text-suave">{c.estado === "cancelada" ? `No se dictó${c.motivo_cancelacion ? `: ${c.motivo_cancelacion}` : ""}` : `${c.tema || "Sin tema cargado"} · ${n > 0 ? `${n} con asistencia` : "asistencia sin cargar"}`}</p>
         </div>
         <div className="flex items-center gap-3">
           <Insignia tono={tono}>{etiqueta}</Insignia>
@@ -146,7 +177,9 @@ export default async function ComisionDocente({ params, searchParams }: {
   return (
     <>
       <Titulo descripcion={subtitulo}
-        acciones={<Enlace href="/panel/mis-comisiones" variante="secundario">Mis comisiones</Enlace>}>
+        acciones={esGestion(sesion.perfiles)
+          ? <Enlace href={`/panel/comisiones/${id}`} variante="secundario">Volver a la comisión</Enlace>
+          : <Enlace href="/panel/mis-comisiones" variante="secundario">Mis comisiones</Enlace>}>
         {comision.nombre}
       </Titulo>
       {errorClases ? <div className="mb-4"><Aviso tono="peligro">No pudimos cargar las clases. Actualizá la página.</Aviso></div> : null}
@@ -162,6 +195,25 @@ export default async function ComisionDocente({ params, searchParams }: {
           </div>
         ) : null}
       </Tarjeta>
+
+      {pendientes.length ? (
+        <Tarjeta className="mb-6">
+          <h2 className="text-lg font-bold">Clases sin cargar</h2>
+          <p className="text-sm text-suave">Días de las últimas {DIAS_PENDIENTES / 7} semanas con horario y sin asistencia. Cargala ahora o registrá que no hubo clase.</p>
+          <ul className="divide-y divide-borde">
+            {pendientes.map((p) => <ClasePendiente key={`${p.fecha}-${p.inicio}`} comisionId={id} fecha={p.fecha} etiqueta={fecha(p.fecha)} inicio={p.inicio} fin={p.fin} />)}
+          </ul>
+        </Tarjeta>
+      ) : null}
+
+      {comision.estado !== "cancelada" && comision.fecha_inicio <= hoy ? (
+        <details className="mb-6">
+          <summary className="cursor-pointer text-sm font-semibold text-marca">Cargar la asistencia de otro día</summary>
+          <Tarjeta className="mt-2">
+            <OtraFecha comisionId={id} desde={comision.fecha_inicio} hasta={[hoy, comision.fecha_fin].sort()[0]} />
+          </Tarjeta>
+        </details>
+      ) : null}
 
       <h2 className="mb-2 text-lg font-bold">Horarios</h2>
       {horarios.length
